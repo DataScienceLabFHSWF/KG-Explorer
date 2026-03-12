@@ -1,0 +1,387 @@
+% ============================================================
+% Internal Working Paper — GAIA Lab, FH Südwestfalen
+% Multi-Modal Mathematical Analysis of a Nuclear Fusion 
+% Knowledge Graph
+% ============================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{subcaption}
+\usepackage{xcolor}
+
+\geometry{margin=2.5cm}
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\title{%
+  Multi-Modal Mathematical Analysis of a Nuclear Fusion\\
+  Knowledge Graph: Structure, Gaps, and Actionable Hypotheses%
+}
+\author{
+  GAIA Lab\\
+  FH Südwestfalen — University of Applied Sciences\\
+  \texttt{[internal working paper]}
+}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present a comprehensive mathematical analysis of the nuclear fusion energy knowledge graph constructed by Loreti et al.\ (2025) from 8,358 papers using named entity recognition.  The graph comprises 50,595 entities linked by 249,505 co-occurrence edges across 90 NER categories.  We apply graph-theoretic, topological (persistent homology), spectral, formal concept analytic, and information-theoretic methods to characterise its structure and identify research gaps.  Key findings include: (i)~a scale-free degree distribution ($\alpha = 2.169$), (ii)~45 persistent topological voids indicating understudied concept intersections, (iii)~a Fiedler value of $\lambda_2 = 0.047$ confirming moderate algebraic connectivity, (iv)~865 formal concepts with 3,028 category implications revealing redundancy in the NER taxonomy, and (v)~38 machine-generated research hypotheses triangulated across multiple analysis modalities.  All analyses are implemented as a reproducible Python pipeline with documented sampling strategies and computational trade-offs.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Introduction}
+% ============================================================
+
+Knowledge graphs (KGs) are structured representations of domain knowledge that enable question answering, gap detection, and ontology evolution.  Loreti et al.\ \citep{loreti2025} constructed a KG for nuclear fusion energy by applying named entity recognition (NER) to 8,358 papers, extracting over 50,000 entities across 90 categories and linking them via co-occurrence in paper abstracts.
+
+This report applies a \emph{multi-modal mathematical analysis pipeline} to this KG, bringing together five complementary analytical perspectives:
+
+\begin{enumerate}
+  \item \textbf{Graph theory}: degree distributions, centrality measures, community detection, k-core decomposition.
+  \item \textbf{Algebraic topology}: persistent homology via Vietoris-Rips filtration.
+  \item \textbf{Spectral graph theory}: Laplacian eigenvalues, Fiedler vector, spectral clustering, graph Fourier transform.
+  \item \textbf{Formal concept analysis}: concept lattice construction and attribute implications.
+  \item \textbf{Information theory}: Von Neumann graph entropy, category mutual information.
+\end{enumerate}
+
+Additionally, we implement \emph{gap detection} modules (structural holes, link prediction, void extraction) that produce actionable research hypotheses.
+
+The contribution is threefold: (a)~a detailed structural characterisation of the fusion KG, (b)~identification of concrete knowledge gaps suitable for follow-up research, and (c)~a reusable, well-documented analysis pipeline.
+
+% ============================================================
+\section{Data and Graph Construction}
+% ============================================================
+
+\subsection{Source Data}
+
+The underlying dataset consists of NER annotations from Loreti et al.\ \citep{loreti2025}, stored as JSON files covering 14 topical sub-collections (Tokamak 1--7, Stellarator 1--3, Inertial Confinement 1--2, Nuclear Fusion 1, Deuterium-Tritium 1, Fusion Energy 1).  Each record maps a paper to its extracted entity mentions with NER categories.
+
+\subsection{Neo4j Graph Schema}
+
+The data is loaded into Neo4j 5.26 with the schema:
+
+\begin{center}
+\texttt{(:Paper)-[:MENTIONS \{count\}]->(:Entity)-[:IN\_CATEGORY]->(:Category)}\\
+\texttt{(:Entity)-[:CO\_OCCURS\_WITH \{weight, papers\}]-(:Entity)}
+\end{center}
+
+Co-occurrence edges are created between all entity pairs that appear in the same paper, with edge weight equal to the number of shared papers.
+
+\subsection{Graph Statistics}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lr}
+\toprule
+Metric & Value \\
+\midrule
+Papers & 8,358 \\
+Entity nodes & 50,595 \\
+Category nodes & 90 \\
+Mention edges & 145,205 \\
+Co-occurrence edges & 249,505 \\
+\bottomrule
+\end{tabular}
+\caption{Knowledge graph statistics.}
+\label{tab:stats}
+\end{table}
+
+% ============================================================
+\section{Graph-Theoretic Analysis}
+% ============================================================
+
+\subsection{Degree Distribution}
+
+The degree distribution follows a power law $P(k) \sim k^{-\alpha}$ with fitted exponent $\alpha = 2.169$ (via maximum likelihood with KS goodness-of-fit; \citealt{clauset2009}).  This places the graph in the $2 < \alpha < 3$ regime characteristic of real-world scale-free networks \citep{barabasi1999}.
+
+\subsection{Centrality}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+Entity & PageRank & Betweenness \\
+\midrule
+tokamak & 0.0213 & 0.1105 \\
+electron & 0.0094 & 0.0538 \\
+stellarator & 0.0084 & 0.0536 \\
+deuterium & 0.0064 & 0.0292 \\
+magnetic field & 0.0062 & 0.0409 \\
+\bottomrule
+\end{tabular}
+\caption{Top-5 entities by PageRank.  Betweenness is sampled ($k=500$) due to computational cost.}
+\label{tab:centrality}
+\end{table}
+
+\subsection{Community Structure}
+
+Louvain modularity optimisation \citep{blondel2008} identifies 1,402 communities.  The largest community contains 9,382 entities (18.5\% of the graph), consistent with a dominant ``core tokamak physics'' cluster.
+
+\subsection{k-Core Decomposition}
+
+The maximum k-core is $k^* = 54$: at least 55 entities each co-occur with at least 54 others.  This core represents the universal vocabulary of fusion research.
+
+% ============================================================
+\section{Topological Data Analysis}
+% ============================================================
+
+\subsection{Persistent Homology}
+
+We compute persistent homology up to dimension 2 on the Vietoris-Rips filtration of the co-occurrence graph, with distance $d_{ij} = 1/w_{ij}$.  Due to computational constraints (the VR complex can grow as $O(2^n)$), we subsample to the top 800 nodes by weighted degree.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrl}
+\toprule
+Dimension & Features & Interpretation \\
+\midrule
+$H_0$ & 800 & Connected components (one per node at birth) \\
+$H_1$ & 138 & Knowledge loops (max persistence 0.667) \\
+$H_2$ & 45 & Knowledge voids (21 infinite) \\
+\bottomrule
+\end{tabular}
+\caption{Persistent homology summary.}
+\label{tab:tda}
+\end{table}
+
+\subsection{Interpretation of H$_2$ Voids}
+
+The 45 persistent $H_2$ features represent 2-dimensional cavities in the co-occurrence complex: sets of entities that co-occur pairwise but never appear jointly in a single paper.  These are \emph{knowledge gaps} in the sense of Carlsson \citep{carlsson2009} and Edelsbrunner \& Harer \citep{edelsbrunner2010}.
+
+Selected void entities:
+\begin{itemize}
+  \item \textbf{asymmetry, flows, hot spot}: ICF implosion symmetry gap.
+  \item \textbf{fast ions, growth rates, ITG}: ITER-relevant turbulence--fast-ion interaction.
+  \item \textbf{ELM, kinetic effects, models}: Tokamak edge physics modelling gap.
+  \item \textbf{growth rates, ITG, NCSX}: Stellarator turbulence gap (NCSX was cancelled before experimental validation).
+\end{itemize}
+
+% ============================================================
+\section{Spectral Analysis}
+% ============================================================
+
+\subsection{Algebraic Connectivity}
+
+The Fiedler value $\lambda_2 = 0.047225$ (computed on the top-5,000 nodes) quantifies algebraic connectivity \citep{fiedler1973}.  The Cheeger inequality gives:
+\begin{equation}
+  0.024 \leq h(G) \leq 0.307
+\end{equation}
+confirming moderate edge expansion, consistent with a modular community structure.
+
+\subsection{Spectral Clustering}
+
+Spectral clustering into $k=8$ groups (Ng, Jordan \& Weiss, 2002) produces unevenly-sized clusters reflecting the hub-dominated topology.  The GFT energy concentration in low-frequency modes confirms smooth degree variation across the graph \citep{shuman2013}.
+
+% ============================================================
+\section{Formal Concept Analysis}
+% ============================================================
+
+FCA \citep{ganter1999} on the entity-category formal context (200 entities $\times$ 90 categories) yields 865 formal concepts and 3,028 attribute implications.  Key findings:
+
+\begin{itemize}
+  \item Bidirectional implications (e.g., Concept $\leftrightarrow$ Physical Process) reveal \emph{category redundancy}: several of the 90 NER categories are effectively equivalent.
+  \item The lattice structure suggests the 90-category taxonomy could be reduced to approximately 25--30 orthogonal categories.
+\end{itemize}
+
+% ============================================================
+\section{Information-Theoretic Analysis}
+% ============================================================
+
+\subsection{Von Neumann Graph Entropy}
+
+The Von Neumann entropy \citep{braunstein2006}:
+\begin{equation}
+  S(G) = -\sum_i \tilde{\lambda}_i \log_2 \tilde{\lambda}_i \approx 0.026 \text{ bits}
+\end{equation}
+The maximum for an $n$-node graph is $\log_2 n \approx 12.3$ bits.  The observed 0.026 bits indicates extreme structure, far from random --- consistent with the scale-free, community-structured topology.
+
+% ============================================================
+\section{Gap Detection}
+% ============================================================
+
+\subsection{Structural Holes}
+
+We identify bridge concepts using Burt's structural hole theory \citep{burt1992}, approximated via effective size (Borgatti, 1997):
+\begin{equation}
+  \text{eff\_size}(v) = \deg(v) - \frac{2 \cdot T(v)}{\deg(v)}
+\end{equation}
+where $T(v)$ is the triangle count through $v$.  The top bridge is \emph{tokamak} (eff.\ size = 1,387, betweenness = 0.034), confirming its role as the primary inter-community connector.
+
+\subsection{Link Prediction}
+
+Adamic-Adar scoring \citep{libennowell2007} on 3.27M non-edge candidates reveals:
+\begin{enumerate}
+  \item \textbf{NER normalisation failures}: Top predictions are singular/plural pairs (tokamak--tokamaks, stellarator--stellarators), indicating entity normalisation issues in the NER pipeline.
+  \item \textbf{Genuine gaps}: predictions like plasma density--tokamaks (AA=38.7) and electrons--neutron (AA=36.0) suggest underexplored research connections.
+\end{enumerate}
+
+\subsection{Integrated Hypotheses}
+
+The gap analysis agent synthesises 38 hypotheses across four gap types (topological voids, structural holes, missing links, knowledge loops).  Multi-method triangulation strengthens confidence: e.g., \emph{tokamak} appears as the \#1 entity in PageRank, bridge score, H$_1$ loop persistence, and link prediction.
+
+% ============================================================
+\section{Computational Methodology}
+% ============================================================
+
+\subsection{Sampling Strategies}
+
+All analyses that are infeasible on the full 50,595-node graph use ``top-$N$ by weighted degree'' subsampling:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+Analysis & Sample & Complexity & Runtime \\
+\midrule
+TDA (ripser) & 800 & $O(n^3)$ typical & 15s \\
+Spectral (eigsh) & 5,000 & $O(n^2 + kn)$ & 9s \\
+FCA (lattice) & 200 & $O(|G||M||L|)$ & 20s \\
+Structural holes & 2,000 & $O(m\sqrt{m})$ & 80s \\
+Link prediction & 3,000 & $O(nd^2)$ & 80s \\
+\bottomrule
+\end{tabular}
+\caption{Sampling parameters and runtimes.  All times on i7-class CPU.}
+\label{tab:sampling}
+\end{table}
+
+\subsection{Justification}
+
+In scale-free networks, high-degree nodes dominate information flow \citep{chung2006}.  Subsampling the top-$N$ by weighted degree captures the densest subgraph, which contains the most interesting structural and topological features.  The Laplacian eigenvalues of the subgraph provide a lower bound on the full graph's eigenvalues \citep{chung1997}.
+
+% ============================================================
+\section{Conclusions}
+% ============================================================
+
+\begin{enumerate}
+  \item The fusion KG exhibits classic scale-free properties ($\alpha = 2.169$) with \emph{tokamak} as the dominant hub concept.
+  \item Persistent homology reveals 45 topological voids --- concrete, actionable knowledge gaps such as the asymmetry--flows--hot spot interaction in ICF.
+  \item Structural hole analysis confirms that a small number of bridge concepts (tokamak, electron, magnetic field) mediate cross-community knowledge flow; their role should be considered in research priority-setting.
+  \item FCA reveals significant category redundancy in the 90-class NER taxonomy, suggesting a reduced schema of $\sim$25--30 categories would suffice.
+  \item Link prediction identifies systematic NER normalisation failures (singular/plural conflation) alongside genuine missing relationships.
+  \item The Von Neumann entropy $S(G) \approx 0.026$ bits confirms the graph is far from random, consistent with the structured nature of scientific knowledge.
+  \item All analyses are implemented in a reproducible Python pipeline with documented computational trade-offs and sampling strategies.
+\end{enumerate}
+
+\subsection{Next Steps}
+
+\begin{itemize}
+  \item \textbf{Entity normalisation}: Merge the top-50 predicted singular/plural/synonym pairs and re-run analyses.
+  \item \textbf{Full-text enrichment}: Extend beyond abstracts to full paper text via OpenAlex/Unpaywall.
+  \item \textbf{LLM gap agent}: Configure OpenAI API to generate richer research hypotheses from detected gaps.
+  \item \textbf{Temporal decomposition}: Slice the graph by publication year to track research evolution.  (Implemented via the new ``--year`` flag in \texttt{run\_analysis.py}.)
+\end{itemize}
+
+% ============================================================
+% References
+% ============================================================
+\bibliographystyle{plainnat}
+
+\begin{thebibliography}{99}
+
+\bibitem[Albert et~al.(2000)]{albert2000}
+Albert, R., Jeong, H., and Barabási, A.-L.\ (2000).
+\newblock Error and attack tolerance of complex networks.
+\newblock \emph{Nature}, 406, 378--382.
+
+\bibitem[Barabási and Albert(1999)]{barabasi1999}
+Barabási, A.-L.\ and Albert, R.\ (1999).
+\newblock Emergence of scaling in random networks.
+\newblock \emph{Science}, 286(5439), 509--512.
+
+\bibitem[Bauer(2021)]{bauer2021}
+Bauer, U.\ (2021).
+\newblock Ripser: efficient computation of Vietoris-Rips persistence barcodes.
+\newblock \emph{J.\ Applied and Computational Topology}, 5, 391--423.
+
+\bibitem[Blondel et~al.(2008)]{blondel2008}
+Blondel, V.~D., Guillaume, J.-L., Lambiotte, R., and Lefebvre, E.\ (2008).
+\newblock Fast unfolding of communities in large networks.
+\newblock \emph{J.\ Statistical Mechanics}, P10008.
+
+\bibitem[Borgatti(1997)]{borgatti1997}
+Borgatti, S.~P.\ (1997).
+\newblock Structural holes: unpacking Burt's redundancy measures.
+\newblock \emph{Connections}, 20(1), 35--38.
+
+\bibitem[Braunstein et~al.(2006)]{braunstein2006}
+Braunstein, S.~L., Gharibian, S., and Severini, S.\ (2006).
+\newblock The Laplacian of a graph as a density matrix.
+\newblock \emph{Annals of Combinatorics}, 10(3), 291--317.
+
+\bibitem[Burt(1992)]{burt1992}
+Burt, R.~S.\ (1992).
+\newblock \emph{Structural Holes: The Social Structure of Competition}.
+\newblock Harvard University Press.
+
+\bibitem[Carlsson(2009)]{carlsson2009}
+Carlsson, G.\ (2009).
+\newblock Topology and data.
+\newblock \emph{Bulletin of the AMS}, 46(2), 255--308.
+
+\bibitem[Chung(1997)]{chung1997}
+Chung, F.~R.~K.\ (1997).
+\newblock \emph{Spectral Graph Theory}.
+\newblock AMS.
+
+\bibitem[Chung and Lu(2006)]{chung2006}
+Chung, F.\ and Lu, L.\ (2006).
+\newblock \emph{Complex Graphs and Networks}.
+\newblock AMS.
+
+\bibitem[Clauset et~al.(2009)]{clauset2009}
+Clauset, A., Shalizi, C.~R., and Newman, M.~E.~J.\ (2009).
+\newblock Power-law distributions in empirical data.
+\newblock \emph{SIAM Review}, 51(4), 661--703.
+
+\bibitem[Edelsbrunner and Harer(2010)]{edelsbrunner2010}
+Edelsbrunner, H.\ and Harer, J.\ (2010).
+\newblock \emph{Computational Topology: An Introduction}.
+\newblock AMS.
+
+\bibitem[Fiedler(1973)]{fiedler1973}
+Fiedler, M.\ (1973).
+\newblock Algebraic connectivity of graphs.
+\newblock \emph{Czechoslovak Mathematical Journal}, 23(2), 298--305.
+
+\bibitem[Ganter and Wille(1999)]{ganter1999}
+Ganter, B.\ and Wille, R.\ (1999).
+\newblock \emph{Formal Concept Analysis: Mathematical Foundations}.
+\newblock Springer.
+
+\bibitem[Liben-Nowell and Kleinberg(2007)]{libennowell2007}
+Liben-Nowell, D.\ and Kleinberg, J.\ (2007).
+\newblock The link-prediction problem for social networks.
+\newblock \emph{JASIST}, 58(7), 1019--1031.
+
+\bibitem[Loreti et~al.(2025)]{loreti2025}
+Loreti, A.\ et~al.\ (2025).
+\newblock Automated construction of a knowledge graph of nuclear fusion energy for effective elicitation and retrieval of information.
+\newblock arXiv:2504.07738.
+
+\bibitem[Newman(2010)]{newman2010}
+Newman, M.~E.~J.\ (2010).
+\newblock \emph{Networks: An Introduction}.
+\newblock Oxford University Press.
+
+\bibitem[Shuman et~al.(2013)]{shuman2013}
+Shuman, D.~I., Narang, S.~K., Frossard, P., Ortega, A., and Vandergheynst, P.\ (2013).
+\newblock The emerging field of signal processing on graphs.
+\newblock \emph{IEEE Signal Processing Magazine}, 30(3), 83--98.
+
+\end{thebibliography}
+
+\end{document}
