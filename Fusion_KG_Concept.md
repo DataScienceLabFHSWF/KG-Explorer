@@ -213,26 +213,7 @@ The paper validates Zipf's law on entity frequency: $f(r) = C / r^\alpha$ where 
 | **Eigenvector centrality** | $C_E(v) = \frac{1}{\lambda} \sum_u A_{vu} C_E(u)$ (eigenvector of adjacency matrix for largest eigenvalue $\lambda$) | Importance by association: a concept is important if it co-occurs with other important concepts.  Similar to PageRank but without damping. |
 | **PageRank** | $\text{PR}(v) = \frac{1-d}{\lvert V\rvert} + d \sum_{u \to v} \frac{\text{PR}(u)}{\deg^{\text{out}}(u)}$ with damping $d \approx 0.85$ | Recursive importance — identifies the "canonical" concepts.  On an undirected co-occurrence graph, this converges to a weighted degree-like measure but with propagation effects. |
 
-**Implementation**: Neo4j GDS (Graph Data Science) library provides all of these as built-in algorithms callable via Cypher.  For the co-occurrence graph projected in-memory:
-
-```cypher
--- Project the graph
-CALL gds.graph.project('fusion-cooc', 'Entity',
-  {CO_OCCURS_WITH: {properties: 'weight'}})
-
--- PageRank
-CALL gds.pageRank.stream('fusion-cooc',
-  {relationshipWeightProperty: 'weight'})
-YIELD nodeId, score
-RETURN gds.util.asNode(nodeId).name AS entity, score
-ORDER BY score DESC LIMIT 50
-
--- Betweenness
-CALL gds.betweenness.stream('fusion-cooc')
-YIELD nodeId, score
-RETURN gds.util.asNode(nodeId).name AS entity, score
-ORDER BY score DESC LIMIT 50
-```
+**Implementation**: Neo4j GDS (Graph Data Science) library provides all of these as built-in algorithms callable via Cypher — see [Implementation Guide 1](docs/implementation_guides.md#1-guide-graph-theoretic-analysis-in-neo4j-gds).
 
 #### 4.1.4  Community Detection
 
@@ -366,33 +347,7 @@ Either way, it generates hypotheses for domain experts to evaluate.
 
 #### 4.2.6  Implementation
 
-```python
-import numpy as np
-from ripser import ripser
-from persim import plot_diagrams
-
-# Build distance matrix from co-occurrence weights
-# Convert weights to distances: d(u,v) = 1/w(u,v) for connected pairs
-# d(u,v) = infinity for disconnected pairs
-distance_matrix = np.full((n, n), np.inf)
-for (i, j), weight in co_occurrence_weights.items():
-    distance_matrix[i][j] = 1.0 / weight
-    distance_matrix[j][i] = 1.0 / weight
-np.fill_diagonal(distance_matrix, 0)
-
-# Compute persistent homology up to dimension 2
-result = ripser(distance_matrix, maxdim=2,
-                distance_matrix=True)
-
-# Plot persistence diagrams
-plot_diagrams(result['dgms'], show=True)
-
-# Extract persistent H2 features (knowledge gaps)
-h2_features = result['dgms'][2]
-persistent_voids = h2_features[
-    h2_features[:, 1] - h2_features[:, 0] > threshold
-]
-```
+See [Implementation Guide 2](docs/implementation_guides.md#2-guide-persistent-homology-with-ripser) for runnable code connecting to Neo4j and computing per-community persistence diagrams.
 
 **Scalability note**: For 108K nodes, the full distance matrix is infeasible (O(n²) memory).  Solutions:
 - Work on subgraphs per community (post Louvain/Leiden).
@@ -479,37 +434,7 @@ $$(H_t)_{ij} = \sum_k e^{-t\lambda_k} v_{k,i} v_{k,j}$$
 
 #### 4.3.7  Implementation
 
-```python
-import numpy as np
-from scipy.sparse import csgraph
-from scipy.sparse.linalg import eigsh
-
-# Build sparse adjacency matrix from Neo4j export
-# A[i,j] = co-occurrence weight
-
-# Compute Laplacian
-L = csgraph.laplacian(A, normed=True)
-
-# First k eigenvalues/vectors
-k = 20
-eigenvalues, eigenvectors = eigsh(L, k=k, which='SM')
-
-# Fiedler value
-fiedler_value = eigenvalues[1]
-fiedler_vector = eigenvectors[:, 1]
-
-# Spectral clustering
-from sklearn.cluster import KMeans
-embedding = eigenvectors[:, 1:k]     # skip constant eigenvector
-embedding /= np.linalg.norm(embedding, axis=1, keepdims=True)
-kmeans = KMeans(n_clusters=k-1)
-labels = kmeans.fit_predict(embedding)
-
-# Heat kernel at time t
-t = 1.0
-heat_kernel_diag = np.sum(np.exp(-t * eigenvalues)
-                          * eigenvectors**2, axis=1)
-```
+See [Implementation Guide 4](docs/implementation_guides.md#4-guide-spectral-analysis) for the complete sparse-Laplacian eigendecomposition, spectral clustering, and heat kernel code.
 
 ### 4.4  Category Theory for Ontology Engineering
 
@@ -764,28 +689,11 @@ These rules (called the Duquenne-Guigues basis) form the **minimal, complete axi
 
 #### 4.5.6  Implementation
 
-```python
-from concepts import Context
-
-# Build formal context from KG
-objects = list(entity_categories.keys())  # entity names
-attributes = list(all_categories)         # 28 category names
-booleans = [[cat in entity_categories[ent]
-             for cat in attributes]
-            for ent in objects]
-
-ctx = Context(objects, attributes, booleans)
-lattice = ctx.lattice
-
-# Get implications
-for impl in lattice.implications():
-    print(f"{impl.premise} → {impl.conclusion}")
-
-# Visualise lattice (for subsets)
-lattice.graphviz()
-```
+See [Implementation Guide 3](docs/implementation_guides.md#3-guide-formal-concept-analysis) for the complete FCA pipeline that reads the NER JSON files and constructs the concept lattice.
 
 ### 4.6  Information-Theoretic Measures
+
+**Why?**  The graph's topology tells us *where* entities are connected; information theory tells us *how much* those connections mean.  By treating the graph's Laplacian as a density matrix and its edge weights as probability distributions, we can quantify the overall structural complexity of the knowledge landscape, detect which NER categories are informationally redundant or independent, and measure directed causal influence between research sub-fields over time.  These measures complement the structural analyses of §4.1–4.5 by asking not just *what* is connected but *what that connectivity is worth*.
 
 #### 4.6.1  Graph Entropy
 
@@ -838,261 +746,9 @@ Transfer entropy measures **directed causal influence** between time series.  If
 
 **Why?**  Several of the analyses above (TDA persistent homology, spectral decomposition, FCA lattice computation) are computationally infeasible on the full 50,000+ entity graph.  The standard solution is to first partition the graph using community detection (Louvain/Leiden), then run the expensive method independently on each community's subgraph.  This converts an $O(n^3)$ problem into many smaller $O(k^3)$ problems, where $k \ll n$ is the community size.  Critically, the results are more *interpretable* too: a TDA void found inside the "plasma diagnostics" community has a clear domain meaning, whereas a void found in the full graph is hard to contextualise.
 
-#### 4.7.1  The General Pattern
+Every community-scoped analysis follows the same three-step pattern: detect communities on the full graph → run the method on each community subgraph → aggregate results across communities.  The same scaffold applies for TDA, spectral analysis, and FCA alike.
 
-Every community-scoped analysis follows the same three steps:
-
-```
-Step 1: Detect communities on the full graph
-        → partition P = {C_1, C_2, ..., C_k}
-
-Step 2: For each community C_i:
-        a. Extract the induced subgraph G[C_i]
-        b. Run the expensive method M on G[C_i]
-        c. Store results tagged with community label i
-
-Step 3: Aggregate / compare results across communities
-        → cross-community summary report
-```
-
-The Python scaffold for this pattern looks like:
-
-```python
-import networkx as nx
-import community as community_louvain  # python-louvain
-
-def community_scoped_analysis(G: nx.Graph, method_fn, **method_kwargs):
-    """
-    Run method_fn on every community subgraph of G.
-
-    Parameters
-    ----------
-    G           : full weighted co-occurrence graph
-    method_fn   : callable(subgraph, **kwargs) → result
-    method_kwargs: passed through to method_fn
-
-    Returns
-    -------
-    dict mapping community_id -> result
-    """
-    # Step 1 – detect communities (resolution can be tuned)
-    partition = community_louvain.best_partition(G, weight='weight')
-    # partition: {node -> community_id}
-
-    # invert: community_id -> list[node]
-    from collections import defaultdict
-    communities = defaultdict(list)
-    for node, cid in partition.items():
-        communities[cid].append(node)
-
-    results = {}
-    for cid, members in sorted(communities.items(),
-                                key=lambda x: len(x[1]),
-                                reverse=True):
-        subgraph = G.subgraph(members).copy()
-        if subgraph.number_of_nodes() < 5:
-            continue  # skip trivially small communities
-        print(f"  Community {cid}: {subgraph.number_of_nodes()} nodes, "
-              f"{subgraph.number_of_edges()} edges")
-        results[cid] = method_fn(subgraph, **method_kwargs)
-
-    return results, partition
-```
-
-#### 4.7.2  TDA Per Community
-
-Persistent homology on the full graph is $O(n^3)$ in the worst case.  Per-community TDA reduces this to manageable scale — typically the top 10–20 communities by size will cover the majority of entities.
-
-```python
-import numpy as np
-import ripser
-
-def tda_on_subgraph(subgraph: nx.Graph, max_dim: int = 2,
-                    max_nodes: int = 500) -> dict:
-    """
-    Run persistent homology on a community subgraph.
-
-    Large communities are trimmed to the top-max_nodes entities
-    by weighted degree before computing homology, preserving the
-    densest (most information-rich) core of the community.
-    """
-    nodes = list(subgraph.nodes())
-
-    # Trim to top-max_nodes by weighted degree if needed
-    if len(nodes) > max_nodes:
-        degrees = dict(subgraph.degree(weight='weight'))
-        nodes = sorted(nodes, key=lambda n: degrees[n],
-                       reverse=True)[:max_nodes]
-        subgraph = subgraph.subgraph(nodes).copy()
-        nodes = list(subgraph.nodes())
-
-    n = len(nodes)
-    node_idx = {node: i for i, node in enumerate(nodes)}
-
-    # Build distance matrix: d(u,v) = 1/w(u,v), inf for non-edges
-    D = np.full((n, n), np.inf)
-    np.fill_diagonal(D, 0.0)
-    for u, v, data in subgraph.edges(data=True):
-        w = data.get('weight', 1.0)
-        d = 1.0 / w if w > 0 else np.inf
-        D[node_idx[u], node_idx[v]] = d
-        D[node_idx[v], node_idx[u]] = d
-
-    # Replace remaining inf with a large finite value for ripser
-    finite_max = D[D < np.inf].max() * 2
-    D[D == np.inf] = finite_max
-
-    diagrams = ripser.ripser(D, maxdim=max_dim,
-                             distance_matrix=True)['dgms']
-
-    # Extract persistent features above noise threshold
-    threshold = 0.1 * (finite_max / 2)
-    gaps = []
-    for dim, dgm in enumerate(diagrams):
-        for birth, death in dgm:
-            persistence = (death - birth) if death < np.inf else np.inf
-            if persistence > threshold:
-                gaps.append({
-                    'dim': dim,
-                    'birth': float(birth),
-                    'death': float(death) if death < np.inf else None,
-                    'persistence': float(persistence) if death < np.inf else None,
-                })
-
-    return {
-        'diagrams': diagrams,
-        'gaps': gaps,
-        'nodes': nodes,
-        'n_nodes': n,
-    }
-
-# Usage
-tda_results, partition = community_scoped_analysis(G, tda_on_subgraph,
-                                                   max_dim=2,
-                                                   max_nodes=300)
-```
-
-#### 4.7.3  Spectral Analysis Per Community
-
-Computing all eigenvalues of a 50K-node Laplacian is slow; doing it on 100-node community subgraphs is instant.  Per-community Fiedler values tell you which communities are themselves nearly disconnected (candidates for further splitting) vs. tightly coupled.
-
-```python
-from scipy.sparse import csgraph
-from scipy.sparse.linalg import eigsh
-import scipy.sparse as sp
-
-def spectral_on_subgraph(subgraph: nx.Graph, k: int = 10) -> dict:
-    """
-    Compute Fiedler value + spectral clustering for a community subgraph.
-    """
-    nodes = list(subgraph.nodes())
-    n = len(nodes)
-    if n < k + 2:
-        k = max(2, n - 2)
-
-    node_idx = {node: i for i, node in enumerate(nodes)}
-    rows, cols, data = [], [], []
-    for u, v, d in subgraph.edges(data=True):
-        i, j = node_idx[u], node_idx[v]
-        w = d.get('weight', 1.0)
-        rows += [i, j]; cols += [j, i]; data += [w, w]
-
-    A = sp.csr_matrix((data, (rows, cols)), shape=(n, n))
-    L = csgraph.laplacian(A, normed=True)
-
-    eigenvalues, eigenvectors = eigsh(L, k=k, which='SM',
-                                      tol=1e-6, maxiter=5000)
-    idx = np.argsort(eigenvalues)
-    eigenvalues = eigenvalues[idx]
-    eigenvectors = eigenvectors[:, idx]
-
-    fiedler_value = float(eigenvalues[1]) if n > 1 else 0.0
-    fiedler_vector = eigenvectors[:, 1].tolist()
-
-    return {
-        'nodes': nodes,
-        'fiedler_value': fiedler_value,
-        'fiedler_vector': fiedler_vector,
-        'eigenvalues': eigenvalues.tolist(),
-        'spectral_gap': float(eigenvalues[2] - eigenvalues[1])
-                        if n > 2 else 0.0,
-    }
-
-spectral_results, _ = community_scoped_analysis(G, spectral_on_subgraph, k=8)
-
-# Communities with low Fiedler value are internally fragmented
-fragmented = {cid: r['fiedler_value']
-              for cid, r in spectral_results.items()
-              if r['fiedler_value'] < 0.05}
-print("Internally fragmented communities:", fragmented)
-```
-
-#### 4.7.4  FCA Per Community
-
-Building the full concept lattice over all 50K entities is intractable.  Restricting FCA to one community at a time makes it fast and yields domain-specific implication rules.
-
-```python
-from concepts import Context
-
-def fca_on_subgraph(subgraph: nx.Graph,
-                    entity_categories: dict,
-                    all_categories: list) -> dict:
-    """
-    Build formal context and derive implications for entities in subgraph.
-    """
-    members = [n for n in subgraph.nodes()
-               if n in entity_categories]
-    if len(members) < 3:
-        return {'implications': [], 'n_concepts': 0}
-
-    booleans = [[cat in entity_categories[ent]
-                 for cat in all_categories]
-                for ent in members]
-
-    ctx = Context(members, all_categories, booleans)
-    lattice = ctx.lattice
-
-    implications = []
-    for impl in lattice.implications():
-        implications.append({
-            'premise': list(impl.premise),
-            'conclusion': list(impl.conclusion),
-        })
-
-    return {
-        'n_entities': len(members),
-        'n_concepts': len(lattice),
-        'implications': implications,
-    }
-```
-
-#### 4.7.5  Aggregating Cross-Community Results
-
-After running per-community analyses, you want a unified summary:
-
-```python
-def summarise_tda_across_communities(tda_results: dict,
-                                     partition: dict,
-                                     nodes: list) -> list:
-    """
-    Collect all H2 knowledge-gap features across communities,
-    sorted by persistence (most significant first).
-    """
-    # Build reverse lookup: node -> community label name
-    # (you may have a community_labels dict from Louvain run)
-    all_gaps = []
-    for cid, result in tda_results.items():
-        for gap in result['gaps']:
-            if gap['dim'] == 2:   # H2 = knowledge voids
-                gap['community'] = cid
-                gap['community_size'] = result['n_nodes']
-                all_gaps.append(gap)
-
-    # Sort by persistence descending (most robust gaps first)
-    all_gaps.sort(key=lambda g: g.get('persistence') or 0,
-                  reverse=True)
-    return all_gaps
-```
+**Implementation**: `analysis/community_scoped.py` — see [Implementation Guide 7](docs/implementation_guides.md#7-guide-community-scoped-analysis) for the complete scaffold, per-community TDA/spectral/FCA functions, and the cross-community aggregation helper.
 
 ---
 
@@ -1114,45 +770,6 @@ Two hyperparameters control the walk strategy:
 - $p$ (return parameter): high $p$ → the walk is less likely to return to the previous node → more exploratory (DFS-like, captures global structure).
 - $q$ (in-out parameter): low $q$ → the walk tends to stay in the local neighbourhood → more like BFS, captures local community structure.
 
-```python
-from node2vec import Node2Vec
-
-def train_node2vec(G: nx.Graph,
-                   dimensions: int = 128,
-                   walk_length: int = 30,
-                   num_walks: int = 200,
-                   p: float = 1.0,
-                   q: float = 0.5,
-                   workers: int = 4) -> dict:
-    """
-    Train Node2Vec embeddings on the co-occurrence graph.
-
-    p=1, q=0.5 biases walks toward DFS (global structure).
-    p=1, q=2   biases walks toward BFS (local neighbourhood).
-    """
-    # Node2Vec expects string node ids
-    G_str = nx.relabel_nodes(G, {n: str(n) for n in G.nodes()})
-
-    node2vec = Node2Vec(
-        G_str,
-        dimensions=dimensions,
-        walk_length=walk_length,
-        num_walks=num_walks,
-        p=p, q=q,
-        weight_key='weight',
-        workers=workers,
-        quiet=False,
-    )
-    model = node2vec.fit(window=10, min_count=1, batch_words=4)
-
-    embeddings = {node: model.wv[str(node)]
-                  for node in G.nodes()}
-    return embeddings, model
-
-# After training, find similar entities:
-# model.wv.most_similar('tokamak', topn=10)
-```
-
 **Practical notes for the fusion KG:**
 - With 50K nodes and 200 walks of length 30, Node2Vec generates 10M training sentences — feasible on a single machine in 10–30 minutes.
 - Use `weight_key='weight'` so stronger co-occurrence edges are more likely to be traversed.
@@ -1171,51 +788,6 @@ For the fusion KG:
 - **Edge features**: co-occurrence weight, number of shared papers.
 - **Model**: GraphSAGE (Hamilton et al., 2017) or Graph Attention Network (Velič ković et al., 2018) — both handle large graphs efficiently via mini-batch sampling.
 
-```python
-# Using PyTorch Geometric (PyG)
-import torch
-import torch.nn.functional as F
-from torch_geometric.nn import SAGEConv
-from torch_geometric.data import Data
-
-class FusionGraphSAGE(torch.nn.Module):
-    def __init__(self, in_channels: int, hidden: int, out_channels: int):
-        super().__init__()
-        self.conv1 = SAGEConv(in_channels, hidden)
-        self.conv2 = SAGEConv(hidden, out_channels)
-
-    def forward(self, x, edge_index, edge_weight=None):
-        x = self.conv1(x, edge_index)
-        x = F.relu(x)
-        x = F.dropout(x, p=0.3, training=self.training)
-        x = self.conv2(x, edge_index)
-        return x  # shape: (n_nodes, out_channels)
-
-def build_pyg_data(G: nx.Graph,
-                   node_features: dict,  # node -> np.array
-                   ) -> Data:
-    """Convert networkx graph to a PyG Data object."""
-    nodes = list(G.nodes())
-    node_idx = {n: i for i, n in enumerate(nodes)}
-
-    x = torch.tensor(
-        np.stack([node_features[n] for n in nodes]),
-        dtype=torch.float
-    )
-    edge_index = torch.tensor(
-        [[node_idx[u], node_idx[v]]
-         for u, v in G.edges()],
-        dtype=torch.long
-    ).t().contiguous()
-    edge_weight = torch.tensor(
-        [G[u][v].get('weight', 1.0) for u, v in G.edges()],
-        dtype=torch.float
-    )
-    return Data(x=x, edge_index=edge_index,
-                edge_attr=edge_weight,
-                num_nodes=len(nodes))
-```
-
 **When to use GNNs over Node2Vec:**
 - When you have meaningful node features (category labels, citation counts, publication years).
 - When you want to train on a supervised signal (e.g., predicting missing ontology axioms).
@@ -1228,36 +800,6 @@ The fusion KG has both structural information (co-occurrence graph) and textual 
 1. **Textual embedding**: embed entity names / descriptions using a language model (e.g., `qwen3-embedding`, `sentence-transformers/all-mpnet-base-v2`) → 768–1024-dim semantic vector.
 2. **Structural embedding**: Node2Vec or GNN → 128-dim graph vector.
 3. **Fusion**: concatenate, or train a small MLP to project both into a shared space.
-
-```python
-from sentence_transformers import SentenceTransformer
-
-def build_hybrid_embeddings(G: nx.Graph,
-                             entity_names: list[str],
-                             node2vec_embeddings: dict,
-                             text_model_name: str = 'all-mpnet-base-v2',
-                             ) -> np.ndarray:
-    """
-    Build hybrid embeddings by concatenating structural and semantic vectors.
-    Returns array of shape (n_entities, structural_dim + text_dim).
-    """
-    # Semantic embeddings from entity names
-    model = SentenceTransformer(text_model_name)
-    text_vecs = model.encode(entity_names, batch_size=512,
-                             show_progress_bar=True,
-                             normalize_embeddings=True)
-
-    # Structural embeddings aligned to same order
-    struct_vecs = np.stack([node2vec_embeddings[name]
-                            for name in entity_names])
-
-    # L2-normalise structural vectors to the same scale
-    struct_vecs /= np.linalg.norm(struct_vecs, axis=1, keepdims=True)
-
-    # Concatenate
-    hybrid = np.concatenate([text_vecs, struct_vecs], axis=1)
-    return hybrid
-```
 
 **Why hybrid matters for fusion:**  Pure text embeddings know that "tokamak" and "stellarator" are related (they appear in similar contexts).  But they cannot know that, in *this* corpus, *divertor* bridges the plasma-physics and materials-engineering communities — that is structural information.  The hybrid captures both.
 
@@ -1274,55 +816,9 @@ def build_hybrid_embeddings(G: nx.Graph,
 
 #### 4.8.5  Visualisation: the Knowledge Map
 
-Once embeddings are computed, a 2D "knowledge map" is the most immediately useful artefact for domain experts who are not graph theorists.
+Once embeddings are computed, a 2D "knowledge map" is the most immediately useful artefact for domain experts who are not graph theorists.  Project entity embeddings to 2D with UMAP and render an interactive scatter plot coloured by community — dense clusters are tight research sub-fields; "blank space" between clusters corresponds to the knowledge gaps identified by TDA and structural hole analysis.
 
-```python
-import umap
-import pandas as pd
-import plotly.express as px
-
-def build_knowledge_map(embeddings: np.ndarray,
-                        entity_names: list[str],
-                        categories: list[str],
-                        communities: list[int],
-                        pageranks: list[float]) -> px.Figure:
-    """
-    Project entity embeddings to 2D with UMAP and render an
-    interactive scatter plot coloured by community.
-    """
-    reducer = umap.UMAP(n_components=2,
-                        n_neighbors=15,
-                        min_dist=0.1,
-                        metric='cosine',
-                        random_state=42)
-    coords = reducer.fit_transform(embeddings)
-
-    df = pd.DataFrame({
-        'x': coords[:, 0],
-        'y': coords[:, 1],
-        'entity': entity_names,
-        'category': categories,
-        'community': [str(c) for c in communities],
-        'pagerank': pageranks,
-    })
-
-    fig = px.scatter(
-        df, x='x', y='y',
-        color='community',
-        size='pagerank',
-        size_max=20,
-        hover_data=['entity', 'category', 'pagerank'],
-        title='Fusion Knowledge Graph — Entity Embedding Map',
-        template='plotly_white',
-    )
-    fig.update_traces(marker=dict(opacity=0.7))
-    return fig
-
-# Export to interactive HTML
-# fig.write_html('output/knowledge_map.html')
-```
-
-The resulting plot shows the fusion knowledge landscape as a geographic map: dense clusters are tight research sub-fields, and the "blank space" between clusters corresponds to the knowledge gaps identified by TDA and structural hole analysis.
+**Implementation**: `analysis/graph_embeddings.py` — see [Implementation Guide 8](docs/implementation_guides.md#8-guide-graph-embeddings) for Node2Vec training, GraphSAGE setup, hybrid embedding construction, and the UMAP knowledge-map code.
 
 ---
 
@@ -1368,70 +864,7 @@ Human Reviewer (Streamlit UI)
 Updated Ontology + Re-extraction
 ```
 
-**Implementation plan for the Gap Analyser module:**
-
-```python
-# gap_analyser/topological_gaps.py
-class TopologicalGapDetector:
-    """Detect H1 and H2 features in the co-occurrence complex."""
-    
-    def __init__(self, neo4j_driver, community_label=None):
-        self.driver = neo4j_driver
-        self.community = community_label
-    
-    def extract_subgraph(self):
-        """Pull co-occurrence edges from Neo4j,
-        optionally filtered by community."""
-        # Cypher query → sparse adjacency matrix
-        ...
-    
-    def compute_persistence(self, max_dim=2):
-        """Compute persistent homology via ripser."""
-        # Returns persistence diagrams for H0, H1, H2
-        ...
-    
-    def identify_voids(self, persistence_threshold=0.1):
-        """Extract persistent H2 features
-        and map back to entity names."""
-        # Returns list of (entities, birth, death, persistence)
-        ...
-    
-    def generate_gap_report(self):
-        """Produce structured report for OntologyExtender."""
-        ...
-```
-
-```python
-# gap_analyser/structural_gaps.py
-class StructuralGapDetector:
-    """Detect structural holes and bridge concepts."""
-    
-    def compute_burt_constraint(self):
-        """Burt's constraint measure for each node.
-        Low constraint = structural hole."""
-        ...
-    
-    def find_bridge_concepts(self, top_k=20):
-        """High betweenness + low clustering."""
-        ...
-```
-
-```python
-# gap_analyser/link_predictor.py
-class LinkPredictor:
-    """Predict missing co-occurrence edges."""
-    
-    def common_neighbours_score(self, u, v):
-        return len(set(neighbours[u]) & set(neighbours[v]))
-    
-    def adamic_adar_score(self, u, v):
-        return sum(1 / np.log(deg[w])
-                   for w in set(neighbours[u]) & set(neighbours[v]))
-    
-    def predict_missing_edges(self, top_k=100):
-        """Score all non-edges and return top-k candidates."""
-        ...
-```
+See [Implementation Guide 9](docs/implementation_guides.md#9-guide-gap-analysis-module-structure) for the `TopologicalGapDetector`, `StructuralGapDetector`, and `LinkPredictor` class stubs.
 
 ---
 
@@ -1531,24 +964,7 @@ Borrowed from software engineering, apply module quality metrics:
 
 **Good decomposition**: high cohesion within each module + low coupling between modules + high overall modularity $Q$.
 
-**Computing these from existing outputs:** The `communities.csv` output from `graph_analysis.py` assigns each entity a community ID.  Coupling and cohesion can be computed by grouping edges by their source/target community:
-
-```python
-import pandas as pd, networkx as nx
-from analysis.neo4j_utils import build_networkx_graph, fetch_co_occurrence_edges
-
-comms = pd.read_csv("output/communities.csv")  # entity, community_id
-node_to_comm = dict(zip(comms.entity, comms.community_id))
-
-intra, total = 0, 0
-for u, v, d in G.edges(data=True):
-    w = d.get("weight", 1)
-    total += w
-    if node_to_comm.get(u) == node_to_comm.get(v):
-        intra += w
-
-modularity_Q = intra / total  # simplified version; use community_louvain.modularity() for exact
-```
+**Computing these from existing outputs:** The `communities.csv` output from `graph_analysis.py` assigns each entity a community ID.  Coupling and cohesion can be computed by grouping edges by their source/target community — see [Implementation Guide 10](docs/implementation_guides.md#10-guide-coupling-and-cohesion-metrics).
 
 #### 6.2.5  Proposed Fusion Ontology Module Structure
 
@@ -1567,28 +983,9 @@ Based on the 28 categories and expected community detection results:
 
 ### 6.3  From Analysis Outputs to OWL Modules — Actionable Pipeline
 
-Once the analysis has been run, the path from data to OWL modules is:
+Once the analysis has been run, the path from data to OWL modules uses `community_scoped.py` outputs to define module boundaries, manual review to convert implications to OWL axioms, `graph_embeddings.py` to visually validate clusters, and SHACL/reasoner validation to verify the decomposition.
 
-```
-1. community_scoped.py output:
-     community_spectral.csv        → flag communities with λ₂ < 0.05 for further splitting
-     community_fca_implications.json → per-community implication base = module CQs
-
-2. Manual review (OntologyExtender Streamlit UI or Protégé):
-     For each community C_i with high cohesion:
-       - Select dominant categories → becomes the module's class vocabulary
-       - Convert top implications → OWL SubClassOf / ObjectSomeValuesFrom axioms
-       - Identify bridge entities (structural_holes.csv) → inter-module ObjectProperty
-
-3. graph_embeddings.py output (knowledge_map.html):
-     Visual inspection of the UMAP map reveals entity clusters that
-     don't align to any community → candidates for new sub-modules
-
-4. Validation:
-     - SHACL validation of each proposed module
-     - Consistency check: OWL reasoner (HermiT/Pellet) on merged modules
-     - Re-run coupling/cohesion metrics to verify decomposition quality
-```
+See [Implementation Guide 11](docs/implementation_guides.md#11-guide-from-analysis-outputs-to-owl-modules) for the step-by-step procedure.
 
 ---
 
@@ -1706,40 +1103,9 @@ Inspired by GCR (Luo et al. 2025, ICML).
 
 ### 7.4  Domain Configuration for Fusion
 
-The GraphQAAgent is domain-neutral — all domain specifics live in `config/domain.yaml`.  To deploy it over the Fusion KG, create a fusion-specific domain config:
+The GraphQAAgent is domain-neutral — all domain specifics live in `config/domain.yaml`.  To deploy it over the Fusion KG, create a fusion-specific domain config covering entity label, relation types, Cypher templates, entity type list, and demo questions.
 
-```yaml
-# config/domain_fusion.yaml
-domain:
-  name: Fusion Energy Research
-  language: en
-
-neo4j:
-  entity_label: Entity
-  paper_label: Paper
-  relation_types:
-    - CO_OCCURS_WITH
-    - IN_CATEGORY
-    - MENTIONS
-
-cypher_templates:
-  entity_neighbourhood: |
-    MATCH (e:Entity {name: $name})-[:CO_OCCURS_WITH]-(n:Entity)
-    RETURN n.name AS entity, n.category AS category
-    ORDER BY n.mentions DESC LIMIT 20
-
-entity_types:
-  - Device Type
-  - Plasma Property
-  - Physical Process
-  - Facility/Institution
-  # ... (all 28 categories)
-
-demo_questions:
-  - "What connects tokamak and stellarator research?"
-  - "Which plasma instabilities are most discussed in recent papers?"
-  - "What are the key differences between ITER and W7-X?"
-```
+See [Implementation Guide 12](docs/implementation_guides.md#12-guide-fusion-domain-configuration-for-graphqaagent) for the complete `domain_fusion.yaml` template.
 
 ### 7.5  Local Bridge: `analysis/graph_qa.py`
 
@@ -1748,13 +1114,7 @@ This repository includes `analysis/graph_qa.py` — a lightweight, standalone Cy
 - Feeding domain-expert query templates into GraphQAAgent's Cypher strategy.
 - Integration testing before deploying the full stack.
 
-Query modes available: entity lookup, neighbourhood, path search, bridge concepts, trend query, community context, gap-aware.
-
-```bash
-python -m analysis.graph_qa "What connects tokamak and stellarator?"
-python -m analysis.graph_qa --mode bridge "plasma"
-python -m analysis.graph_qa --mode trend "tritium"
-```
+Query modes available: entity lookup, neighbourhood, path search, bridge concepts, trend query, community context, gap-aware.  See [Implementation Guide 12](docs/implementation_guides.md#12-guide-fusion-domain-configuration-for-graphqaagent) for CLI usage examples.
 
 ### 7.6  API Endpoints
 
@@ -1935,29 +1295,7 @@ Our **KGPlatform already implements a superset** of the Loreti et al. pipeline, 
 
 ### 9.4  Quick Start: Fusion Stack
 
-```bash
-# 1. Start the full GraphQAAgent stack
-cd GraphQAAgent
-cp .env.example .env        # set NEO4J_URI to your running instance
-docker compose up -d --build
-# API: http://localhost:8002/docs
-
-# 2. Point it at the fusion KG Neo4j instance
-#    (edit .env: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
-
-# 3. Configure fusion domain
-cp config/domain.yaml config/domain_fusion.yaml
-# Edit domain_fusion.yaml with fusion entity types, Cypher templates (see §7.4)
-
-# 4. (Optional) Load fusion OWL into Fuseki for ontology-expanded retrieval
-#    Upload output/fusion_ontology.owl via Fuseki UI at http://localhost:3030
-
-# 5. Ask the first question
-curl -X POST http://localhost:8002/api/v1/qa/ask \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What connects tokamak and stellarator research?",
-       "strategy": "hybrid"}'
-```
+See [Implementation Guide 13](docs/implementation_guides.md#13-guide-quick-start--full-fusion-stack) for the complete step-by-step deployment sequence: starting the GraphQAAgent stack, pointing it at the Neo4j instance, configuring the fusion domain, loading the OWL into Fuseki, and running the first query.
 
 ---
 
