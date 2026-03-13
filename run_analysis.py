@@ -38,6 +38,8 @@ MODULES = {
     "gaps":        "analysis.gap_analysis_agent",
     "zipf":        "analysis.zipf_analysis",
     "ontology":    "analysis.ontology_generator",
+    "communities": "analysis.community_scoped",
+    "embeddings":  "analysis.graph_embeddings",
 }
 
 
@@ -106,7 +108,7 @@ def main():
                 mod = __import__(module_path, fromlist=["run"])
 
                 # TDA and void modules accept max_nodes arg
-                if key in ("tda", "voids"):
+                if key in ("tda", "voids", "communities"):
                     result = mod.run(driver, max_nodes=args.max_nodes, year=args.year)
                 elif key == "gaps":
                     # Gap agent reads files, doesn't need driver but signature accepts year

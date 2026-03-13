@@ -181,6 +181,8 @@ The fusion KG is a large, weighted, typed graph.  Several mathematical framework
 
 ### 4.1  Graph-Theoretic Analysis
 
+**Why?**  Before applying any sophisticated method, we need to understand the basic wiring of the graph: how many connections does each concept have, which concepts are unavoidable in short paths between others, and whether the graph has a hub-and-spoke structure or a more democratic one.  These graph-theoretic metrics are the *vocabulary* for describing the topology of the knowledge space — they tell us *what* the graph looks like, and they form the basis for every more advanced analysis that follows.
+
 #### 4.1.1  Formal Definitions
 
 Let $G = (V, E, w)$ be the co-occurrence graph where:
@@ -266,13 +268,15 @@ This decomposition identifies the **knowledge frontier**: entities on the outer 
 #### 4.1.6  Motif Analysis
 
 A **network motif** is a recurring subgraph pattern.  In the co-occurrence graph:
-- **Triangles** (3-cliques): concept triads that systematically appear together (e.g., `tokamak–plasma–confinement`).  The clustering coefficient $C(v) = \frac{2 |\text{triangles through } v|}{\deg(v)(\deg(v)-1)}$ quantifies this locally.
+- **Triangles** (3-cliques): concept triads that systematically appear together (e.g., `tokamak–plasma–confinement`).  The clustering coefficient $C(v) = \frac{2 \lvert\text{triangles through } v\rvert}{\deg(v)(\deg(v)-1)}$ quantifies this locally.
 - **4-cliques and higher**: increasingly rare but represent deeply interconnected concept clusters.
 - **Stars**: one hub connected to many peripheral nodes — indicates a broad concept (e.g., *plasma* connecting to dozens of specific properties).
 
 The **motif spectrum** (relative frequency of each motif type compared to a random graph) characterises the graph's organisational principle.
 
 ### 4.2  Algebraic Topology — Persistent Homology
+
+**Why?**  Graph metrics like degree and centrality tell us about individual nodes, but they miss emergent *shape*.  Two graphs can have identical degree sequences yet radically different global structure — one might have a big void in the middle (concepts that co-occur pairwise but are never all studied together), while the other does not.  Persistent homology is the tool that detects these voids.  In the context of a knowledge graph, a persistent void means a set of concepts that should, in principle, all connect — but the research community has not yet made that connection.  Those are precisely the research gaps we want to find.
 
 #### 4.2.1  Intuition
 
@@ -397,6 +401,8 @@ persistent_voids = h2_features[
 
 ### 4.3  Spectral Graph Theory
 
+**Why?**  Community detection algorithms like Louvain are heuristics: they work well in practice but offer no formal guarantee of optimality.  Spectral methods provide that guarantee — they embed the graph in a geometric space where community structure becomes a clustering problem with well-understood theory.  Beyond clustering, the spectrum of the graph Laplacian encodes deep global properties: connectivity bottlenecks (the Fiedler value), optimal cuts, and even how information or influence would diffuse across the network over time.  This lends itself to answering questions like *"if a new breakthrough happens in plasma heating, which adjacent areas will feel its impact first?"*
+
 #### 4.3.1  The Graph Laplacian
 
 **Definition.** For a weighted graph $G = (V, E, w)$, define:
@@ -406,7 +412,7 @@ persistent_voids = h2_features[
 - **Normalised Laplacian**: $\mathcal{L} = D^{-1/2} L D^{-1/2} = I - D^{-1/2} A D^{-1/2}$
 - **Random-walk Laplacian**: $L_{\text{rw}} = D^{-1} L = I - D^{-1} A$
 
-$L$ is positive semi-definite with eigenvalues $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_{|V|}$.
+$L$ is positive semi-definite with eigenvalues $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_{\lvert V\rvert}$.
 
 #### 4.3.2  The Fiedler Value (Algebraic Connectivity)
 
@@ -416,7 +422,7 @@ $\lambda_2$ (the smallest non-zero eigenvalue) is the **Fiedler value**.  It mea
 - Small $\lambda_2$: near a bottleneck — there's a weak link between two large sub-communities.
 - Large $\lambda_2$: the graph is robust and well-connected.
 
-The corresponding **Fiedler vector** $\mathbf{v}_2$ gives the optimal bipartition of the graph: nodes with $v_{2,i} > 0$ vs. $v_{2,i} < 0$ form the two sides of the weakest cut.  This is the spectral version of community detection.
+The corresponding **Fiedler vector** $\boldsymbol{v}_2$ gives the optimal bipartition of the graph: nodes with $v_{2,i} \gt 0$ vs. $v_{2,i} \lt 0$ form the two sides of the weakest cut.  This is the spectral version of community detection.
 
 **For the fusion KG**: $\lambda_2$ reveals how tightly connected the overall fusion research landscape is.  If small, there are distinct sub-fields with weak links between them — important for understanding knowledge transfer barriers.
 
@@ -506,6 +512,8 @@ heat_kernel_diag = np.sum(np.exp(-t * eigenvalues)
 ```
 
 ### 4.4  Category Theory for Ontology Engineering
+
+**Why?**  Ontologies are not isolated artefacts — they need to be aligned with each other, merged, restricted to sub-domains, and mapped onto reference standards (like EMMO or DOLCE).  Without a rigorous mathematical language for these operations, ontology integration becomes ad-hoc and error-prone.  Category theory provides exactly that language: it defines precisely what it means for two ontologies to be "compatible", what it means to "merge" them without losing information, and how composed mappings behave.  Even if you never write a single category-theoretic proof, the conceptual vocabulary (functor, natural transformation, pushout) helps you *think rigorously* about ontology design decisions.
 
 #### 4.4.1  Why Category Theory?
 
@@ -629,6 +637,8 @@ Ologs provide a **bridge** between formal category theory and domain-expert-frie
 
 ### 4.5  Formal Concept Analysis (FCA)
 
+**Why?**  The original Loreti et al. KG uses a flat taxonomy of 28 NER categories.  "Flat" means there is no declared hierarchy — *Plasma Event* and *Physical Process* are treated as independent labels, with no formal statement that one is a subtype of the other.  In practice, however, the data may enforce hidden structure: every entity ever labelled *Plasma Event* might also always get labelled *Physical Process*.  FCA is an algebraic technique that reads the raw co-occurrence of labels on entities and **automatically derives the complete classification hierarchy** implied by the data.  The output is a formal concept lattice and a minimal set of logical rules (implications) that can be directly promoted to OWL subclass axioms — turning the flat NER taxonomy into a proper ontology without any manual engineering.
+
 #### 4.5.1  Formal Context
 
 **Definition.** A **formal context** is a triple $\mathbb{K} = (G, M, I)$ where:
@@ -649,35 +659,93 @@ Ologs provide a **bridge** between formal category theory and domain-expert-frie
 
 #### 4.5.2  Formal Concepts
 
-For a set of objects $A \subseteq G$, define:
+The two **derivation operators** are the mathematical heart of FCA.  They let you move back and forth between a group of objects and the attributes they share.
+
+For a set of objects $A \subseteq G$, write:
 $$A' = \{m \in M : \forall g \in A, \; g I m\}$$
-(the attributes shared by all objects in $A$).
+Read: *"the set of all attributes $m$ such that every object $g$ in $A$ has attribute $m$"* — i.e., the attributes **shared by all** objects in $A$.
 
-For a set of attributes $B \subseteq M$, define:
+For a set of attributes $B \subseteq M$, write:
 $$B' = \{g \in G : \forall m \in B, \; g I m\}$$
-(the objects having all attributes in $B$).
+Read: *"the set of all objects $g$ such that $g$ has every attribute $m$ in $B$"* — i.e., the objects that **possess all** listed attributes.
 
-A **formal concept** is a pair $(A, B)$ where $A' = B$ and $B' = A$.  $A$ is the **extent** (objects), $B$ is the **intent** (shared attributes).
+The notation $\forall$ means "for all" and $\in$ means "is a member of".  The prime symbol $'$ is the FCA convention for the derivation operator, not differentiation.
+
+**Concrete example** using our fusion KG subset:
+- Take $A = \{\text{Tokamak}, \text{JET}\}$ (both are devices and facilities).
+- Then $A' = \{\text{Device Type}, \text{Facility}\}$ — the attributes found on *every* object in $A$.
+- Now take $B = \{\text{Plasma Property}\}$.
+- Then $B' = \{\text{H-mode}, \text{Plasma}\}$ — every entity that carries the "Plasma Property" attribute.
+
+A **formal concept** is a pair $(A, B)$ where $A' = B$ and $B' = A$ simultaneously — meaning $A$ and $B$ are in perfect "Galois correspondence": $A$ is exactly the set of objects whose shared attributes are exactly $B$, and $B$ is exactly the set of attributes shared by exactly the objects in $A$.  Neither the extent $A$ nor the intent $B$ can be enlarged without breaking this symmetry.  $A$ is called the **extent** of the concept ("these are the things that fall under the concept") and $B$ is the **intent** ("these are the defining characteristics of the concept").
+
+**Example concepts from the fusion context:**
+- Concept 1: extent = {Tokamak, Stellarator, RFP, Spheromak}, intent = {Device Type} — "all entities that are only a Device Type form one concept".
+- Concept 2: extent = {JET, ITER, W7-X, DEMO}, intent = {Device Type, Facility} — "entities that are simultaneously a Device Type *and* a Facility form a more specific concept".
+- Concept 2 is *more specific* than Concept 1 because its extent is a subset and its intent is a superset.
 
 #### 4.5.3  Concept Lattice
 
-The set of all formal concepts, ordered by extent inclusion $(A_1, B_1) \leq (A_2, B_2) \iff A_1 \subseteq A_2$, forms a **complete lattice** — the **concept lattice** $\underline{\mathfrak{B}}(\mathbb{K})$.
+**What is a lattice?**  In everyday language, a *lattice* is a criss-cross grid (like a garden trellis).  In mathematics, a **lattice** is a *partially ordered set* in which every pair of elements has a unique *least upper bound* (called the *join*, or ∨) and a unique *greatest lower bound* (called the *meet*, or ∧).  Think of a family tree in reverse: each person appears below their parents, and the structure tells you both direct and indirect ancestry.  The concept lattice in FCA is exactly this kind of hierarchical structure, but built over *concepts* rather than people.
+
+Concretely: say Concept X has extent {Tokamak, Stellarator, JET, ITER} and Concept Y has extent {JET, ITER}.  Then Y ≤ X (Y is *below* X, i.e. Y is a specialisation of X) because the extent of Y is a subset of the extent of X.  Going upward in the lattice means generalising (fewer defining attributes, more objects fall under the concept); going downward means specialising (more defining attributes, fewer objects qualify).
+
+The **concept lattice** $\underline{\mathfrak{B}}(\mathbb{K})$ is the set of *all* formal concepts (every valid extent–intent pair), ordered by extent inclusion:
+$$(A_1, B_1) \leq (A_2, B_2) \iff A_1 \subseteq A_2$$
+This is equivalent to $B_2 \subseteq B_1$ (more specific concepts have *larger* intents — more defining properties).
+
+The lattice is **complete**, meaning it has a unique top element (the concept whose extent is *all* entities — intent = attributes shared by everything, often just ∅) and a unique bottom element (the concept whose intent is *all* attributes — extent = entities that have every attribute, often ∅).
 
 **What the lattice reveals for the fusion KG:**
-- **Subcategory structure**: If all entities typed as *Plasma Event* are also typed as *Physical Process*, the lattice shows *Plasma Event* below *Physical Process* — suggesting a formal subclass relationship that the original 28-type flat taxonomy doesn't capture.
-- **Category interdependencies**: Categories that always co-occur on the same entities are grouped together.
-- **Potential splits**: If a category contains two clearly separate clusters of entities in the lattice, it should be split into sub-categories.
+- **Subcategory structure**: If all entities typed as *Plasma Event* are also typed as *Physical Process*, the lattice shows *Plasma Event* below *Physical Process* — a formal subclass relationship absent from the original 28-type flat taxonomy.
+- **Category interdependencies**: Categories that always co-occur on the same entities are grouped together in the lattice — they represent a single concept with a compound intent.
+- **Potential splits**: If a category's extent splits into two disjoint sub-extents further down the lattice, those sub-extents should probably be separate categories.
+- **Redundant categories**: If two categories always appear together (every entity with one has the other), they collapse into a single lattice node — a candidate for merging.
 
-#### 4.5.4  Attribute Implications
+#### 4.5.4  Attribute Implications and the Duquenne-Guigues Basis
 
-From the formal context, we can derive **implications** $B_1 \to B_2$ meaning "every entity with all attributes in $B_1$ also has all attributes in $B_2$".  The **Duquenne-Guigues basis** is the minimal set of implications from which all others follow.
+An **attribute implication** is a rule of the form
+$$B_1 \rightarrow B_2$$
+where $B_1, B_2 \subseteq M$ are sets of attributes, read *"every entity that has all attributes in $B_1$ necessarily also has all attributes in $B_2$"*.
 
-**Example implications we might discover:**
+Implications hold **universally** in the formal context: there must be no counterexample (no entity that has all of $B_1$ but is missing some attribute from $B_2$).  This is stronger than a correlation — it is a logical entailment backed by every row of the incidence table.
+
+**The Duquenne-Guigues Basis** (also called the *stem basis* or *canonical basis*) solves the following problem: the set of all implications that hold in a formal context can be astronomically large — exponential in the number of attributes.  Most of these implications are *redundant* because they can be logically derived from simpler ones.  The Duquenne-Guigues basis is the **unique minimal set of implications** from which *every* implication that holds in the data can be derived using Armstrong's axioms (reflexivity, augmentation, transitivity — the same rules used in database normalisation theory).
+
+**Why "minimal" matters:**  If you have 3,000 implications, you cannot review them all.  The Duquenne-Guigues basis gives you the irreducible core — the set of rules with no redundancy.  Every other rule is a logical consequence of the basis rules.  In practice:
+- The basis rules are the candidates for OWL `SubClassOf` axioms.
+- Individually surprising basis rules flag potential NER labelling errors.
+- The *size* of the basis (number of rules) measures the *complexity* of the category system — a large basis means the taxonomy has rich, non-trivial structure; a small basis means the 28 categories are nearly independent.
+
+**Pseudo-intent:** The Duquenne-Guigues algorithm works by computing *pseudo-intents* — sets of attributes $P \subseteq M$ that are "almost" the intent of some concept but not quite.  Formally, $P$ is a pseudo-intent if:
+1. $P'' \neq P$ (i.e., $P$ is not itself the intent of any concept — it has a proper superset as its closure $P''$).
+2. For every pseudo-intent $Q \subsetneq P$: $Q'' \subseteq P$ (every strictly smaller pseudo-intent's closure is already inside $P$).
+
+Each pseudo-intent $P$ yields a basis rule: $P \rightarrow P'' \setminus P$ ("$P$ implies everything its closure adds on top of $P$").
+
+**Worked example:**  Suppose the formal context contains:
+- Entities typed *Plasma Event* always also carry *Physical Process* → basis rule: `{Plasma Event} → {Physical Process}`.
+- Entities with *Control Systems* always also carry *Experimental Apparatus* → basis rule: `{Control Systems} → {Experimental Apparatus}`.
+- But any entity with *both* *Plasma Event* and *Control Systems* also always carries *Detection/Monitoring Systems* (perhaps they are always diagnostic plasma control loops) → basis rule: `{Plasma Event, Control Systems} → {Detection/Monitoring Systems}`.
+
+This last rule cannot be derived from the first two alone — it is genuinely new information that the basis exposes.
+
+**From implications to OWL axioms:**  Each basis rule $B_1 \rightarrow B_2$ translates directly:
+```
+# OWL (Manchester syntax)
+Class: PlasmaEvent
+  SubClassOf: PhysicalProcess  # from {Plasma Event} → {Physical Process}
+
+Class: ControlSystems
+  SubClassOf: ExperimentalApparatus  # from {Control Systems} → {Experimental Apparatus}
+```
+This gives the formal ontology its backbone of `SubClassOf` axioms — derived mechanically from the data, not from manual expert annotation.
+
+**Example implications we might discover in the fusion KG:**
 - `{Plasma Event} → {Physical Process}` (every plasma event is a physical process)
 - `{Control Systems} → {Experimental Apparatus}` (every control system is experimental apparatus)
 - `{Nuclear Fusion Experimental Facility} → {Facility or Institution}` (hierarchy)
-
-These implications can be directly translated into OWL subclass axioms for the formalised ontology.
+- `{Particle, Chemical Element} → {Physical Process}` (dual-classified entities are always processes too — possibly a labelling artefact worth investigating)
 
 #### 4.5.5  Plain-Language Summary of FCA
 
@@ -763,6 +831,498 @@ A category with high Shannon entropy has co-occurrence partners spread evenly ac
 
 **Transfer Entropy — "Does category X drive category Y over time?"**
 Transfer entropy measures **directed causal influence** between time series.  If a surge in *Plasma Physics* papers in year $t$ is predictive of a surge in *Fusion Materials* papers in year $t+1$ (beyond what Materials papers' own history predicts), the transfer entropy from Plasma Physics to Fusion Materials is positive.  This reveals which sub-fields are **leaders** (drivers of future research) and which are **followers**.
+
+---
+
+### 4.7  Community-Scoped Analysis — Running Expensive Methods Per Community
+
+**Why?**  Several of the analyses above (TDA persistent homology, spectral decomposition, FCA lattice computation) are computationally infeasible on the full 50,000+ entity graph.  The standard solution is to first partition the graph using community detection (Louvain/Leiden), then run the expensive method independently on each community's subgraph.  This converts an $O(n^3)$ problem into many smaller $O(k^3)$ problems, where $k \ll n$ is the community size.  Critically, the results are more *interpretable* too: a TDA void found inside the "plasma diagnostics" community has a clear domain meaning, whereas a void found in the full graph is hard to contextualise.
+
+#### 4.7.1  The General Pattern
+
+Every community-scoped analysis follows the same three steps:
+
+```
+Step 1: Detect communities on the full graph
+        → partition P = {C_1, C_2, ..., C_k}
+
+Step 2: For each community C_i:
+        a. Extract the induced subgraph G[C_i]
+        b. Run the expensive method M on G[C_i]
+        c. Store results tagged with community label i
+
+Step 3: Aggregate / compare results across communities
+        → cross-community summary report
+```
+
+The Python scaffold for this pattern looks like:
+
+```python
+import networkx as nx
+import community as community_louvain  # python-louvain
+
+def community_scoped_analysis(G: nx.Graph, method_fn, **method_kwargs):
+    """
+    Run method_fn on every community subgraph of G.
+
+    Parameters
+    ----------
+    G           : full weighted co-occurrence graph
+    method_fn   : callable(subgraph, **kwargs) → result
+    method_kwargs: passed through to method_fn
+
+    Returns
+    -------
+    dict mapping community_id -> result
+    """
+    # Step 1 – detect communities (resolution can be tuned)
+    partition = community_louvain.best_partition(G, weight='weight')
+    # partition: {node -> community_id}
+
+    # invert: community_id -> list[node]
+    from collections import defaultdict
+    communities = defaultdict(list)
+    for node, cid in partition.items():
+        communities[cid].append(node)
+
+    results = {}
+    for cid, members in sorted(communities.items(),
+                                key=lambda x: len(x[1]),
+                                reverse=True):
+        subgraph = G.subgraph(members).copy()
+        if subgraph.number_of_nodes() < 5:
+            continue  # skip trivially small communities
+        print(f"  Community {cid}: {subgraph.number_of_nodes()} nodes, "
+              f"{subgraph.number_of_edges()} edges")
+        results[cid] = method_fn(subgraph, **method_kwargs)
+
+    return results, partition
+```
+
+#### 4.7.2  TDA Per Community
+
+Persistent homology on the full graph is $O(n^3)$ in the worst case.  Per-community TDA reduces this to manageable scale — typically the top 10–20 communities by size will cover the majority of entities.
+
+```python
+import numpy as np
+import ripser
+
+def tda_on_subgraph(subgraph: nx.Graph, max_dim: int = 2,
+                    max_nodes: int = 500) -> dict:
+    """
+    Run persistent homology on a community subgraph.
+
+    Large communities are trimmed to the top-max_nodes entities
+    by weighted degree before computing homology, preserving the
+    densest (most information-rich) core of the community.
+    """
+    nodes = list(subgraph.nodes())
+
+    # Trim to top-max_nodes by weighted degree if needed
+    if len(nodes) > max_nodes:
+        degrees = dict(subgraph.degree(weight='weight'))
+        nodes = sorted(nodes, key=lambda n: degrees[n],
+                       reverse=True)[:max_nodes]
+        subgraph = subgraph.subgraph(nodes).copy()
+        nodes = list(subgraph.nodes())
+
+    n = len(nodes)
+    node_idx = {node: i for i, node in enumerate(nodes)}
+
+    # Build distance matrix: d(u,v) = 1/w(u,v), inf for non-edges
+    D = np.full((n, n), np.inf)
+    np.fill_diagonal(D, 0.0)
+    for u, v, data in subgraph.edges(data=True):
+        w = data.get('weight', 1.0)
+        d = 1.0 / w if w > 0 else np.inf
+        D[node_idx[u], node_idx[v]] = d
+        D[node_idx[v], node_idx[u]] = d
+
+    # Replace remaining inf with a large finite value for ripser
+    finite_max = D[D < np.inf].max() * 2
+    D[D == np.inf] = finite_max
+
+    diagrams = ripser.ripser(D, maxdim=max_dim,
+                             distance_matrix=True)['dgms']
+
+    # Extract persistent features above noise threshold
+    threshold = 0.1 * (finite_max / 2)
+    gaps = []
+    for dim, dgm in enumerate(diagrams):
+        for birth, death in dgm:
+            persistence = (death - birth) if death < np.inf else np.inf
+            if persistence > threshold:
+                gaps.append({
+                    'dim': dim,
+                    'birth': float(birth),
+                    'death': float(death) if death < np.inf else None,
+                    'persistence': float(persistence) if death < np.inf else None,
+                })
+
+    return {
+        'diagrams': diagrams,
+        'gaps': gaps,
+        'nodes': nodes,
+        'n_nodes': n,
+    }
+
+# Usage
+tda_results, partition = community_scoped_analysis(G, tda_on_subgraph,
+                                                   max_dim=2,
+                                                   max_nodes=300)
+```
+
+#### 4.7.3  Spectral Analysis Per Community
+
+Computing all eigenvalues of a 50K-node Laplacian is slow; doing it on 100-node community subgraphs is instant.  Per-community Fiedler values tell you which communities are themselves nearly disconnected (candidates for further splitting) vs. tightly coupled.
+
+```python
+from scipy.sparse import csgraph
+from scipy.sparse.linalg import eigsh
+import scipy.sparse as sp
+
+def spectral_on_subgraph(subgraph: nx.Graph, k: int = 10) -> dict:
+    """
+    Compute Fiedler value + spectral clustering for a community subgraph.
+    """
+    nodes = list(subgraph.nodes())
+    n = len(nodes)
+    if n < k + 2:
+        k = max(2, n - 2)
+
+    node_idx = {node: i for i, node in enumerate(nodes)}
+    rows, cols, data = [], [], []
+    for u, v, d in subgraph.edges(data=True):
+        i, j = node_idx[u], node_idx[v]
+        w = d.get('weight', 1.0)
+        rows += [i, j]; cols += [j, i]; data += [w, w]
+
+    A = sp.csr_matrix((data, (rows, cols)), shape=(n, n))
+    L = csgraph.laplacian(A, normed=True)
+
+    eigenvalues, eigenvectors = eigsh(L, k=k, which='SM',
+                                      tol=1e-6, maxiter=5000)
+    idx = np.argsort(eigenvalues)
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+
+    fiedler_value = float(eigenvalues[1]) if n > 1 else 0.0
+    fiedler_vector = eigenvectors[:, 1].tolist()
+
+    return {
+        'nodes': nodes,
+        'fiedler_value': fiedler_value,
+        'fiedler_vector': fiedler_vector,
+        'eigenvalues': eigenvalues.tolist(),
+        'spectral_gap': float(eigenvalues[2] - eigenvalues[1])
+                        if n > 2 else 0.0,
+    }
+
+spectral_results, _ = community_scoped_analysis(G, spectral_on_subgraph, k=8)
+
+# Communities with low Fiedler value are internally fragmented
+fragmented = {cid: r['fiedler_value']
+              for cid, r in spectral_results.items()
+              if r['fiedler_value'] < 0.05}
+print("Internally fragmented communities:", fragmented)
+```
+
+#### 4.7.4  FCA Per Community
+
+Building the full concept lattice over all 50K entities is intractable.  Restricting FCA to one community at a time makes it fast and yields domain-specific implication rules.
+
+```python
+from concepts import Context
+
+def fca_on_subgraph(subgraph: nx.Graph,
+                    entity_categories: dict,
+                    all_categories: list) -> dict:
+    """
+    Build formal context and derive implications for entities in subgraph.
+    """
+    members = [n for n in subgraph.nodes()
+               if n in entity_categories]
+    if len(members) < 3:
+        return {'implications': [], 'n_concepts': 0}
+
+    booleans = [[cat in entity_categories[ent]
+                 for cat in all_categories]
+                for ent in members]
+
+    ctx = Context(members, all_categories, booleans)
+    lattice = ctx.lattice
+
+    implications = []
+    for impl in lattice.implications():
+        implications.append({
+            'premise': list(impl.premise),
+            'conclusion': list(impl.conclusion),
+        })
+
+    return {
+        'n_entities': len(members),
+        'n_concepts': len(lattice),
+        'implications': implications,
+    }
+```
+
+#### 4.7.5  Aggregating Cross-Community Results
+
+After running per-community analyses, you want a unified summary:
+
+```python
+def summarise_tda_across_communities(tda_results: dict,
+                                     partition: dict,
+                                     nodes: list) -> list:
+    """
+    Collect all H2 knowledge-gap features across communities,
+    sorted by persistence (most significant first).
+    """
+    # Build reverse lookup: node -> community label name
+    # (you may have a community_labels dict from Louvain run)
+    all_gaps = []
+    for cid, result in tda_results.items():
+        for gap in result['gaps']:
+            if gap['dim'] == 2:   # H2 = knowledge voids
+                gap['community'] = cid
+                gap['community_size'] = result['n_nodes']
+                all_gaps.append(gap)
+
+    # Sort by persistence descending (most robust gaps first)
+    all_gaps.sort(key=lambda g: g.get('persistence') or 0,
+                  reverse=True)
+    return all_gaps
+```
+
+---
+
+### 4.8  Graph Embeddings
+
+**Why?**  All the methods in §4.1–4.7 work directly on the graph's topology.  Graph embeddings take a different approach: they *represent each node as a point in a low-dimensional continuous vector space* ($\mathbb{R}^d$, typically $d = 64$–$256$), such that nodes that are structurally similar or topologically close end up near each other in that space.  Once you have node vectors, you can apply the entire toolbox of machine learning (clustering, classification, regression, nearest-neighbour search, visualisation) to the KG — without having to think about graphs at all.
+
+This is powerful for:
+- **Link prediction**: do the embeddings of two nodes have a high dot product? Then there should probably be an edge between them.
+- **Entity similarity search**: "which entities are most similar to *divertor* in embedding space?" — even if they are not directly connected.
+- **Visualisation**: project embeddings to 2D with UMAP or t-SNE to produce a "map of fusion knowledge".
+- **Downstream ML**: use entity embeddings as features for classifiers (e.g., predicting whether a missing ontology axiom is correct).
+
+#### 4.8.1  Shallow Structural Embeddings (Node2Vec / DeepWalk)
+
+**Node2Vec** (Grover & Leskovec, 2016) learns embeddings by simulating biased random walks on the graph.  Each walk is a sequence of nodes; the model learns to predict which nodes appear in the same walk window (like Word2Vec on text).
+
+Two hyperparameters control the walk strategy:
+- $p$ (return parameter): high $p$ → the walk is less likely to return to the previous node → more exploratory (DFS-like, captures global structure).
+- $q$ (in-out parameter): low $q$ → the walk tends to stay in the local neighbourhood → more like BFS, captures local community structure.
+
+```python
+from node2vec import Node2Vec
+
+def train_node2vec(G: nx.Graph,
+                   dimensions: int = 128,
+                   walk_length: int = 30,
+                   num_walks: int = 200,
+                   p: float = 1.0,
+                   q: float = 0.5,
+                   workers: int = 4) -> dict:
+    """
+    Train Node2Vec embeddings on the co-occurrence graph.
+
+    p=1, q=0.5 biases walks toward DFS (global structure).
+    p=1, q=2   biases walks toward BFS (local neighbourhood).
+    """
+    # Node2Vec expects string node ids
+    G_str = nx.relabel_nodes(G, {n: str(n) for n in G.nodes()})
+
+    node2vec = Node2Vec(
+        G_str,
+        dimensions=dimensions,
+        walk_length=walk_length,
+        num_walks=num_walks,
+        p=p, q=q,
+        weight_key='weight',
+        workers=workers,
+        quiet=False,
+    )
+    model = node2vec.fit(window=10, min_count=1, batch_words=4)
+
+    embeddings = {node: model.wv[str(node)]
+                  for node in G.nodes()}
+    return embeddings, model
+
+# After training, find similar entities:
+# model.wv.most_similar('tokamak', topn=10)
+```
+
+**Practical notes for the fusion KG:**
+- With 50K nodes and 200 walks of length 30, Node2Vec generates 10M training sentences — feasible on a single machine in 10–30 minutes.
+- Use `weight_key='weight'` so stronger co-occurrence edges are more likely to be traversed.
+- Entity embeddings are the input to the link prediction classifier (§4.8.4).
+
+#### 4.8.2  Message-Passing Embeddings (Graph Neural Networks)
+
+Where Node2Vec only uses graph structure (topology), **Graph Neural Networks (GNNs)** can incorporate node and edge features.  Each GNN layer aggregates the embeddings of a node's neighbours and updates the node's representation:
+
+$$\mathbf{h}_v^{(l+1)} = \sigma\!\left( W^{(l)} \cdot \text{AGG}\!\left(\{\mathbf{h}_u^{(l)} : u \in \mathcal{N}(v)\}\right) \right)$$
+
+where $\mathbf{h}_v^{(l)}$ is the embedding of node $v$ at layer $l$, $\mathcal{N}(v)$ is its neighbourhood, AGG is an aggregation function (mean, max, sum), and $\sigma$ is an activation function.
+
+For the fusion KG:
+- **Node features**: one-hot category vector (28-dim), coreness, degree, PageRank — concatenated.
+- **Edge features**: co-occurrence weight, number of shared papers.
+- **Model**: GraphSAGE (Hamilton et al., 2017) or Graph Attention Network (Velič ković et al., 2018) — both handle large graphs efficiently via mini-batch sampling.
+
+```python
+# Using PyTorch Geometric (PyG)
+import torch
+import torch.nn.functional as F
+from torch_geometric.nn import SAGEConv
+from torch_geometric.data import Data
+
+class FusionGraphSAGE(torch.nn.Module):
+    def __init__(self, in_channels: int, hidden: int, out_channels: int):
+        super().__init__()
+        self.conv1 = SAGEConv(in_channels, hidden)
+        self.conv2 = SAGEConv(hidden, out_channels)
+
+    def forward(self, x, edge_index, edge_weight=None):
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.3, training=self.training)
+        x = self.conv2(x, edge_index)
+        return x  # shape: (n_nodes, out_channels)
+
+def build_pyg_data(G: nx.Graph,
+                   node_features: dict,  # node -> np.array
+                   ) -> Data:
+    """Convert networkx graph to a PyG Data object."""
+    nodes = list(G.nodes())
+    node_idx = {n: i for i, n in enumerate(nodes)}
+
+    x = torch.tensor(
+        np.stack([node_features[n] for n in nodes]),
+        dtype=torch.float
+    )
+    edge_index = torch.tensor(
+        [[node_idx[u], node_idx[v]]
+         for u, v in G.edges()],
+        dtype=torch.long
+    ).t().contiguous()
+    edge_weight = torch.tensor(
+        [G[u][v].get('weight', 1.0) for u, v in G.edges()],
+        dtype=torch.float
+    )
+    return Data(x=x, edge_index=edge_index,
+                edge_attr=edge_weight,
+                num_nodes=len(nodes))
+```
+
+**When to use GNNs over Node2Vec:**
+- When you have meaningful node features (category labels, citation counts, publication years).
+- When you want to train on a supervised signal (e.g., predicting missing ontology axioms).
+- Node2Vec is faster and unsupervised; GNNs are slower but richer.
+
+#### 4.8.3  Semantic + Structural Hybrid Embeddings
+
+The fusion KG has both structural information (co-occurrence graph) and textual information (entity names, paper abstracts, full text).  The most powerful embeddings combine both:
+
+1. **Textual embedding**: embed entity names / descriptions using a language model (e.g., `qwen3-embedding`, `sentence-transformers/all-mpnet-base-v2`) → 768–1024-dim semantic vector.
+2. **Structural embedding**: Node2Vec or GNN → 128-dim graph vector.
+3. **Fusion**: concatenate, or train a small MLP to project both into a shared space.
+
+```python
+from sentence_transformers import SentenceTransformer
+
+def build_hybrid_embeddings(G: nx.Graph,
+                             entity_names: list[str],
+                             node2vec_embeddings: dict,
+                             text_model_name: str = 'all-mpnet-base-v2',
+                             ) -> np.ndarray:
+    """
+    Build hybrid embeddings by concatenating structural and semantic vectors.
+    Returns array of shape (n_entities, structural_dim + text_dim).
+    """
+    # Semantic embeddings from entity names
+    model = SentenceTransformer(text_model_name)
+    text_vecs = model.encode(entity_names, batch_size=512,
+                             show_progress_bar=True,
+                             normalize_embeddings=True)
+
+    # Structural embeddings aligned to same order
+    struct_vecs = np.stack([node2vec_embeddings[name]
+                            for name in entity_names])
+
+    # L2-normalise structural vectors to the same scale
+    struct_vecs /= np.linalg.norm(struct_vecs, axis=1, keepdims=True)
+
+    # Concatenate
+    hybrid = np.concatenate([text_vecs, struct_vecs], axis=1)
+    return hybrid
+```
+
+**Why hybrid matters for fusion:**  Pure text embeddings know that "tokamak" and "stellarator" are related (they appear in similar contexts).  But they cannot know that, in *this* corpus, *divertor* bridges the plasma-physics and materials-engineering communities — that is structural information.  The hybrid captures both.
+
+#### 4.8.4  Downstream Applications of Embeddings in This Project
+
+| Application | Input | Method | Output |
+|---|---|---|---|
+| **Link prediction** | Pairs of entity embeddings | Dot product / MLP classifier trained on observed edges | Ranked list of missing co-occurrence edges |
+| **Entity similarity** | Query entity embedding | Approximate nearest-neighbour search (FAISS / Qdrant) | Top-k most similar entities in embedding space |
+| **Knowledge map** | All entity embeddings | UMAP → 2D; colour by community or category | Interactive scatter plot showing the landscape of fusion knowledge |
+| **Anomaly detection** | Entity embeddings + expected category cluster | Isolation Forest or local outlier factor | Entities that are structurally misplaced (possible NER labelling errors) |
+| **Zero-shot gap detection** | Embedding centroids of communities | Compute pairwise cosine distance between community centroids | Community pairs that are semantically close but structurally disconnected indicate cross-community knowledge gaps |
+| **Ontology axiom prediction** | Embedding pairs for candidate SubClassOf axioms | Cosine similarity + structural containment check | Ranked list of candidate OWL axioms for human review |
+
+#### 4.8.5  Visualisation: the Knowledge Map
+
+Once embeddings are computed, a 2D "knowledge map" is the most immediately useful artefact for domain experts who are not graph theorists.
+
+```python
+import umap
+import pandas as pd
+import plotly.express as px
+
+def build_knowledge_map(embeddings: np.ndarray,
+                        entity_names: list[str],
+                        categories: list[str],
+                        communities: list[int],
+                        pageranks: list[float]) -> px.Figure:
+    """
+    Project entity embeddings to 2D with UMAP and render an
+    interactive scatter plot coloured by community.
+    """
+    reducer = umap.UMAP(n_components=2,
+                        n_neighbors=15,
+                        min_dist=0.1,
+                        metric='cosine',
+                        random_state=42)
+    coords = reducer.fit_transform(embeddings)
+
+    df = pd.DataFrame({
+        'x': coords[:, 0],
+        'y': coords[:, 1],
+        'entity': entity_names,
+        'category': categories,
+        'community': [str(c) for c in communities],
+        'pagerank': pageranks,
+    })
+
+    fig = px.scatter(
+        df, x='x', y='y',
+        color='community',
+        size='pagerank',
+        size_max=20,
+        hover_data=['entity', 'category', 'pagerank'],
+        title='Fusion Knowledge Graph — Entity Embedding Map',
+        template='plotly_white',
+    )
+    fig.update_traces(marker=dict(opacity=0.7))
+    return fig
+
+# Export to interactive HTML
+# fig.write_html('output/knowledge_map.html')
+```
+
+The resulting plot shows the fusion knowledge landscape as a geographic map: dense clusters are tight research sub-fields, and the "blank space" between clusters corresponds to the knowledge gaps identified by TDA and structural hole analysis.
 
 ---
 
@@ -877,6 +1437,21 @@ class LinkPredictor:
 
 ## 6  Domain Decomposition — Formal Submodule Design
 
+> **Why this matters:** A single flat list of 28 categories is easy to understand at first but becomes unmaintainable at scale.  When the ontology grows, when different teams work on different sub-domains, or when you want to import only the plasma-physics module into another project, you need a principled decomposition.  This section describes how to find that decomposition both *bottom-up* (from the graph data) and *top-down* (from the category lattice), and how to measure whether a proposed decomposition is actually good.
+
+### 6.0  What Is Already Implemented
+
+The analysis modules in this repository already provide most of the raw material needed for a data-driven decomposition.  You don't need to run these manually — `python run_analysis.py` produces all outputs below.
+
+| Analysis | Module | Output Files | What It Gives You |
+|---|---|---|---|
+| Louvain community detection | `graph_analysis.py` | `communities.csv` | Natural module boundaries in entity co-occurrence space |
+| Spectral clustering | `spectral_analysis.py` | `spectral_clusters.csv` | Theoretically optimal cuts via graph Laplacian |
+| FCA concept lattice | `fca_analysis.py` | `fca_implications.json` | Category co-occurrence patterns → sub-lattice candidates |
+| Community-scoped FCA | `community_scoped.py` | `community_fca_implications.json` | Per-community category rules → module competency questions |
+| Coupling/cohesion | derivable from `communities.csv` + edge data | — | Module quality metrics (see §6.2.4) |
+| Structural holes | `structural_holes.py` | `structural_holes.csv` | Inter-module brokers → alignment axiom candidates |
+
 ### 6.1  The Problem
 
 Given a large, flat ontology (like the 28 categories), how do we formally decompose it into coherent sub-modules?  This matters because:
@@ -915,6 +1490,8 @@ Step 5: Validate each module independently (SHACL)
 
 This is a **data-driven decomposition**: the modules reflect the actual structure of scientific discourse, not an a priori design.
 
+**In practice:** `community_scoped.py` provides exactly Step 1 and 2 — it runs Louvain, extracts per-community FCA implications, and computes per-community Fiedler values (Step 5 proxy: a low Fiedler value for proposed module $M_i$ signals it should be split further before being formalised as OWL).
+
 #### 6.2.2  FCA-Based Decomposition (Top-Down)
 
 Use the concept lattice (§4.5) to identify natural sub-lattices:
@@ -923,6 +1500,8 @@ Use the concept lattice (§4.5) to identify natural sub-lattices:
 2. Look for **lattice decompositions**: if the lattice factors into a product $L_1 \times L_2$, then the two factors correspond to independent sub-ontologies.
 3. More commonly, look for **sublattices** that are approximately independent (share few concepts with the rest).
 4. Each sublattice defines a module.
+
+**In practice:** `fca_analysis.py` produces the full concept lattice and the Duquenne-Guigues basis for the global context.  `community_scoped.py` computes per-community implication bases — each community's implication base is a natural candidate for one module's competency questions (§6.2.3).
 
 #### 6.2.3  Modular Ontology Modeling (MOM) Methodology
 
@@ -952,6 +1531,25 @@ Borrowed from software engineering, apply module quality metrics:
 
 **Good decomposition**: high cohesion within each module + low coupling between modules + high overall modularity $Q$.
 
+**Computing these from existing outputs:** The `communities.csv` output from `graph_analysis.py` assigns each entity a community ID.  Coupling and cohesion can be computed by grouping edges by their source/target community:
+
+```python
+import pandas as pd, networkx as nx
+from analysis.neo4j_utils import build_networkx_graph, fetch_co_occurrence_edges
+
+comms = pd.read_csv("output/communities.csv")  # entity, community_id
+node_to_comm = dict(zip(comms.entity, comms.community_id))
+
+intra, total = 0, 0
+for u, v, d in G.edges(data=True):
+    w = d.get("weight", 1)
+    total += w
+    if node_to_comm.get(u) == node_to_comm.get(v):
+        intra += w
+
+modularity_Q = intra / total  # simplified version; use community_louvain.modularity() for exact
+```
+
 #### 6.2.5  Proposed Fusion Ontology Module Structure
 
 Based on the 28 categories and expected community detection results:
@@ -967,65 +1565,253 @@ Based on the 28 categories and expected community detection results:
 | **Safety & Standards** | Safety Feature/Regulatory Standard, Database, Scientific Publication | "What safety standards apply to tritium handling?" |
 | **Fusion Materials** | (new sub-module, entities from Chemical Element + System Component overlap) | "What materials withstand plasma-facing conditions?" |
 
+### 6.3  From Analysis Outputs to OWL Modules — Actionable Pipeline
+
+Once the analysis has been run, the path from data to OWL modules is:
+
+```
+1. community_scoped.py output:
+     community_spectral.csv        → flag communities with λ₂ < 0.05 for further splitting
+     community_fca_implications.json → per-community implication base = module CQs
+
+2. Manual review (OntologyExtender Streamlit UI or Protégé):
+     For each community C_i with high cohesion:
+       - Select dominant categories → becomes the module's class vocabulary
+       - Convert top implications → OWL SubClassOf / ObjectSomeValuesFrom axioms
+       - Identify bridge entities (structural_holes.csv) → inter-module ObjectProperty
+
+3. graph_embeddings.py output (knowledge_map.html):
+     Visual inspection of the UMAP map reveals entity clusters that
+     don't align to any community → candidates for new sub-modules
+
+4. Validation:
+     - SHACL validation of each proposed module
+     - Consistency check: OWL reasoner (HermiT/Pellet) on merged modules
+     - Re-run coupling/cohesion metrics to verify decomposition quality
+```
+
 ---
 
 ## 7  Building a QA / Chatbot Layer (GraphRAG)
 
-### 7.1  Architecture with Full-Text Enrichment
+> **What's already built:** The GraphQAAgent ([GitHub: DataScienceLabFHSWF/GraphQAAgent, branch dev/fast-api-backend](https://github.com/DataScienceLabFHSWF/GraphQAAgent/tree/dev/fast-api-backend)) is a fully implemented, production-ready KG-RAG system.  This section documents its architecture and explains how it connects to the Fusion KG.
 
-```
-                  User Query
-                      │
-              ┌───────▼───────┐
-              │ Query Analyser │
-              │ (entity + intent│
-              │  extraction)   │
-              └───┬───────┬───┘
-                  │       │
-        ┌─────────▼──┐  ┌▼──────────┐
-        │  KG Path   │  │ Vector    │
-        │            │  │ Path      │
-        │ Cypher     │  │ Qdrant    │
-        │ generation │  │ top-k     │
-        │ (ontology- │  │ on full-  │
-        │  informed) │  │ text      │
-        │            │  │ chunks    │
-        └─────┬──────┘  └──┬───────┘
-              │             │
-              ▼             ▼
-        ┌─────────────────────┐
-        │  Reciprocal Rank    │
-        │  Fusion (RRF)       │
-        │  + Deduplication     │
-        │  by paper_id        │
-        └────────┬────────────┘
-                 │
-        ┌────────▼────────────┐
-        │  Context Assembly   │
-        │  • KG subgraph      │
-        │  • Text chunks      │
-        │  • Co-occurrence     │
-        │    triplets          │
-        │  • Metadata          │
-        └────────┬────────────┘
-                 │
-        ┌────────▼────────────┐
-        │  LLM Synthesis      │
-        │  (grounded answer   │
-        │   + source refs)    │
-        └─────────────────────┘
-```
+### 7.0  Three-Repository Ecosystem
 
-### 7.2  Analytical Queries Enabled by Mathematical Analysis
+The QA layer is part of a three-component platform — each repo deployable standalone or jointly via KGPlatform:
 
-| Query Type | Method | Example |
+| Repository | Role | Branch |
 |---|---|---|
-| Bridge concept discovery | Betweenness centrality | "What concepts connect tokamak and stellarator research?" |
-| Knowledge gap identification | Persistent homology H2 | "Where are promising unexplored combinations of concepts?" |
-| Trend analysis | GFT temporal signal decomposition | "Which research areas are growing fastest?" |
-| Community comparison | Louvain + inter-community edge analysis | "How do magnetic and inertial confinement communities overlap?" |
-| Concept importance ranking | PageRank / eigenvector centrality | "What are the most influential concepts in fusion research?" |
-| Knowledge diffusion tracing | Heat kernel | "How did the concept of 'high-β' propagate through the research landscape?" |
+| **KnowledgeGraphBuilder** | KG construction, NER, entity resolution, Neo4j ingestion | `fast-api` |
+| **GraphQAAgent** (this section) | Ontology-informed GraphRAG QA, chat, HITL, evaluation | `dev/fast-api-backend` |
+| **OntologyExtender** | Human-in-the-loop ontology extension, SHACL validation | `fast-api` |
+
+All three share a common infrastructure stack (Neo4j, Qdrant, Fuseki, Ollama) and can be deployed together via `docker compose up -d` at the KGPlatform root.
+
+### 7.1  Full Architecture
+
+```
+User Question (Chat UI / API / CLI)
+    │
+    ▼
+ChatSession ──► QuestionParser ──► OntologyRetriever (expand) ──► Strategy Router
+    │                                     │                              │
+    │              TBox from Fuseki ──────┘         ┌───────────────────┼──────────────────────┐
+    │                                               │                   │                      │
+    │                          VectorRetriever  GraphRetriever     CypherRetriever         AgenticRAG
+    │                          (Qdrant chunks)  (Neo4j subgraphs)  (LLM → Cypher)         (ReAct tools)
+    │                                 │                │                │                      │
+    │                                 └────────────────┴────────────────┘                      │
+    │                                                  │                                       │
+    │                                    RRF + CrossEncoder Rerank                             │
+    │                                                  │                                       │
+    │                                    GraphReasoner (Think-on-Graph + PPR)                  │
+    │                                                  │                                       │
+    │                                    PathRanker (ontology-aware scoring)                   │
+    │                                                  │                                       │
+    ▼                                                  ▼                                       │
+ContextAssembler ◄─────────────────────────────────────┴───────────────────────────────────────┘
+    │
+    ▼
+ChainOfThoughtReasoner ──► AnswerGenerator ──► AnswerVerifier ──► Explainer
+    │                                                                  │
+    ▼                                                                  ▼
+ChatSession (history + streaming SSE) ◄──────────────────── QA Response
+                                                           (answer, provenance,
+                                                            subgraph JSON,
+                                                            faithfulness score,
+                                                            reasoning chain)
+```
+
+**Infrastructure:**
+- **Neo4j** — stores the knowledge graph (entities, co-occurrence edges, paper nodes)
+- **Qdrant** — stores dense vector embeddings of full-text chunks (enables RAG over full text)
+- **Fuseki** — stores the OWL TBox (class hierarchy, properties, SPARQL-queryable)
+- **Ollama** — runs local LLM inference (e.g., qwen3:8b, llama3.1:8b); cloud APIs supported
+- **FastAPI** — REST API at port 8002 (`/docs` for Swagger UI)
+- **Streamlit** — optional frontend (Chat, KG Explorer, Ontology Browser, Reasoning Visualisation)
+
+### 7.2  Retrieval Strategies
+
+Seven strategies are available, each suited to different query types:
+
+| Strategy | Key Idea | Best For |
+|---|---|---|
+| **VectorOnly** | Embed query → Qdrant top-k search | Fuzzy, semantic questions across full-text |
+| **GraphOnly** | Entity-centric subgraph or path retrieval from Neo4j | Precise structural queries ("What connects X and Y?") |
+| **Hybrid (FusionRAG)** | Adaptive RRF + CrossEncoder reranking of both | General-purpose; best balance of precision and recall |
+| **Ontology-Expanded** | Class hierarchy + synonym expansion via Fuseki before retrieval | Queries using synonyms or parent/child concepts |
+| **Cypher** | LLM generates Cypher, validated against ontology templates, executed on Neo4j | Precise aggregate queries ("How many papers mention tritium?") |
+| **Agentic** | ReAct agent dynamically composes vector, graph, entity, path, and ontology tools | Complex multi-hop questions requiring planning |
+| **HybridSOTA** | Full pipeline: parse → expand → 3-way retrieve → CoT reasoning → generate → verify → explain | Highest quality; most compute-intensive |
+
+The recommended default is `hybrid` for most questions; `hybrid_sota` for research-grade depth.
+
+### 7.3  Advanced Reasoning Components
+
+#### 7.3.1  GraphReasoner — Think-on-Graph + PPR
+
+Iteratively explores the graph guided by the LLM.  At each step:
+1. LLM selects the most relevant relation types from the current frontier.
+2. Graph traversal expands along those relations.
+3. Personalised PageRank (PPR) scores candidate nodes.
+4. Nodes below the PPR threshold are pruned; the frontier advances.
+
+This lets the agent follow reasoning chains across multiple hops without enumerating all paths.
+
+#### 7.3.2  PathRanker — Relation-Aware Scoring
+
+Each retrieved path is scored:
+$$\text{score}(P) = \alpha \cdot \text{confidence}(P) + \beta \cdot \text{relation\_relevance}(P) + \gamma \cdot \text{length\_penalty}(P)$$
+where `relation_relevance` is determined by comparing the path's relation types against the OWL TBox's expected relations for the query's entity types.  This penalises coincidental paths that happen to exist in the graph but are ontologically irrelevant.
+
+#### 7.3.3  ChainOfThoughtReasoner
+
+Decomposes complex questions into atomic reasoning steps.  For each step:
+- Retrieves targeted sub-graph evidence (not full context).
+- Builds a KG-grounded reasoning chain, step by step.
+- Inspired by GCR (Luo et al. 2025, ICML) and KG-GPT (Kim 2023).
+
+This is particularly powerful for questions like "What is the relationship between ELM suppression and tritium breeding?" — which require combining evidence from multiple graph neighbourhoods.
+
+#### 7.3.4  AnswerVerifier
+
+Post-generation faithfulness check:
+1. Extracts factual claims from the generated answer.
+2. Verifies each claim against the retrieved KG subgraph.
+3. Flags unsupported or contradicted claims.
+4. Returns a `faithfulness_score ∈ [0, 1]` alongside the answer.
+
+Inspired by GCR (Luo et al. 2025, ICML).
+
+### 7.4  Domain Configuration for Fusion
+
+The GraphQAAgent is domain-neutral — all domain specifics live in `config/domain.yaml`.  To deploy it over the Fusion KG, create a fusion-specific domain config:
+
+```yaml
+# config/domain_fusion.yaml
+domain:
+  name: Fusion Energy Research
+  language: en
+
+neo4j:
+  entity_label: Entity
+  paper_label: Paper
+  relation_types:
+    - CO_OCCURS_WITH
+    - IN_CATEGORY
+    - MENTIONS
+
+cypher_templates:
+  entity_neighbourhood: |
+    MATCH (e:Entity {name: $name})-[:CO_OCCURS_WITH]-(n:Entity)
+    RETURN n.name AS entity, n.category AS category
+    ORDER BY n.mentions DESC LIMIT 20
+
+entity_types:
+  - Device Type
+  - Plasma Property
+  - Physical Process
+  - Facility/Institution
+  # ... (all 28 categories)
+
+demo_questions:
+  - "What connects tokamak and stellarator research?"
+  - "Which plasma instabilities are most discussed in recent papers?"
+  - "What are the key differences between ITER and W7-X?"
+```
+
+### 7.5  Local Bridge: `analysis/graph_qa.py`
+
+This repository includes `analysis/graph_qa.py` — a lightweight, standalone Cypher-based query interface that works without the full GraphQAAgent stack.  It is useful for:
+- Quick CLI queries during analysis runs.
+- Feeding domain-expert query templates into GraphQAAgent's Cypher strategy.
+- Integration testing before deploying the full stack.
+
+Query modes available: entity lookup, neighbourhood, path search, bridge concepts, trend query, community context, gap-aware.
+
+```bash
+python -m analysis.graph_qa "What connects tokamak and stellarator?"
+python -m analysis.graph_qa --mode bridge "plasma"
+python -m analysis.graph_qa --mode trend "tritium"
+```
+
+### 7.6  API Endpoints
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/v1/qa/ask` | POST | One-shot QA with strategy selection |
+| `/api/v1/chat/send` | POST | Multi-turn chat (SSE streaming or JSON) |
+| `/api/v1/chat/sessions` | GET | List active chat sessions |
+| `/api/v1/chat/sessions/{id}/history` | GET | Retrieve session history |
+| `/api/v1/chat/feedback` | POST | Submit HITL feedback on an answer |
+| `/api/v1/explore/entities` | GET | Entity listing with type filtering |
+| `/api/v1/explore/entities/{id}/subgraph` | GET | Subgraph around an entity |
+| `/api/v1/explore/search` | GET | Full-text entity search |
+| `/api/v1/explore/stats` | GET | KG statistics |
+| `/api/v1/explore/ontology/tree` | GET | OWL class hierarchy |
+
+### 7.7  Human-in-the-Loop (HITL) KG Curation
+
+The system feeds a continuous improvement loop back into the KG:
+
+```
+User asks question  →  Answer generated
+     │                        │
+     ▼                        ▼
+Low confidence?          HITL: Gap Detection
+     │                   proposes new entities
+     │                   or relations for review
+     ▼
+User submits
+feedback via
+/chat/feedback
+     │
+     ▼
+Change proposal
+(proposed → validated → accepted → applied)
+     │
+     ▼
+Neo4j updated  →  Re-embedding  →  Qdrant updated
+```
+
+Gap detection surfaces questions that consistently fail (low confidence or unanswerable) as research opportunities — feeding directly into the gap report format generated by `analysis/gap_analysis_agent.py` in this repository.
+
+### 7.8  Analytical Queries Enabled by Mathematical Analysis
+
+The KG-explorer analysis outputs (§4) directly enhance the retrieval quality:
+
+| Query Type | KG-Explorer Analysis | GraphQAAgent Integration |
+|---|---|---|
+| Bridge concept discovery | Betweenness centrality (`centralities.csv`) | Pre-computed scores injected into PathRanker |
+| Knowledge gap identification | Persistent homology H₂ voids (`knowledge_gaps.json`) | Gap-aware retrieval mode; HITL gap proposals |
+| Trend analysis | GFT temporal decomposition | Time-filtered Cypher templates |
+| Community comparison | Louvain partition (`communities.csv`) | Community-context retrieval mode |
+| Concept importance ranking | PageRank / eigenvector centrality | Entity scoring in GraphReasoner |
+| Related entity retrieval | Node2Vec / hybrid embeddings (`embeddings.npz`) | Can be loaded directly into Qdrant as entity vectors |
+| Knowledge diffusion tracing | Heat kernel propagation | PPR score initialisation in GraphReasoner |
+
+The embeddings produced by `analysis/graph_embeddings.py` can be loaded into Qdrant to replace (or augment) document-chunk vectors with entity-structural vectors, enabling hybrid graph+embedding search.
 
 ---
 
@@ -1098,32 +1884,80 @@ Once multiple domain KGs exist, they can be linked via:
 
 ---
 
-## 9  Authors' Pipeline — Availability and Reconstruction
+## 9  KGPlatform Implementation Status
 
-### 9.1  Current Status
+> This section maps the Loreti et al. pipeline steps against the current state of our implementation.  It has been substantially updated to reflect the capabilities that are already operational in the KGPlatform ecosystem (March 2026).
 
-The Loreti et al. pipeline code is **not publicly available**.  The paper (arXiv:2504.07738v2, June 2025) does not include a code/data availability statement, and no GitHub repository was found linked to the paper or its authors at UKAEA/STFC.
+### 9.1  Paper Pipeline vs. KGPlatform
 
-The NER data (JSON files) we have was obtained directly from the authors.
+The Loreti et al. pipeline code is **not publicly available**.  The paper (arXiv:2504.07738v2) does not include a code/data availability statement, and no repository was found linked to the authors at UKAEA/STFC.  The NER data (JSON files in `data/`) was obtained directly from the authors.
 
-### 9.2  Reconstruction via KGPlatform
+Our **KGPlatform already implements a superset** of the Loreti et al. pipeline, including several capabilities that go far beyond the original paper.
 
-Our KGPlatform already implements a superset of the Loreti et al. pipeline:
+### 9.2  Component Status Table
 
-| Loreti et al. Step | KGPlatform Equivalent | Status |
+| Component | Loreti et al. | KGPlatform Equivalent | Status |
+|---|---|---|---|
+| **Data acquisition** | lens.org API | `daq/` module (OpenAlex, DOI extraction, downloader) | Working (OpenAlex); lens.org: gap |
+| **LLM-based NER** | Llama 3.1/3.3, category list | KnowledgeGraphBuilder (qwen3:8b, ontology-guided extraction) | Working |
+| **Entity resolution** | Normalisation + LLM | KnowledgeGraphBuilder (EntityResolver, ERRunner) | Working |
+| **Neo4j KG storage** | Neo4j ABox | KnowledgeGraphBuilder (Neo4j + provenance + SHACL) | Working |
+| **Zipf validation** | Rank-frequency plot | `analysis/zipf_analysis.py` | Working ✓ (new) |
+| **KG-RAG** | Multi-prompt QA | GraphQAAgent, 7 strategies (vector, graph, hybrid, ontology, cypher, agentic, hybrid_sota) | Working — full stack |
+| **Semantic RE** | LLM-guided relation extraction | KnowledgeGraphBuilder (ontology-constrained RE) | Working |
+| **Graph analysis** | Not in paper | `analysis/graph_analysis.py` (degree, centrality, community) | Working ✓ (new) |
+| **TDA / voids** | Not in paper | `analysis/tda_analysis.py`, `analysis/void_extraction.py` | Working ✓ (new) |
+| **FCA** | Not in paper | `analysis/fca_analysis.py` | Working ✓ (new) |
+| **Spectral analysis** | Not in paper | `analysis/spectral_analysis.py` | Working ✓ (new) |
+| **Community-scoped analysis** | Not in paper | `analysis/community_scoped.py` (Louvain + per-community TDA/spectral/FCA) | Working ✓ (new) |
+| **Graph embeddings** | Not in paper | `analysis/graph_embeddings.py` (Node2Vec, GraphSAGE, UMAP) | Working ✓ (new) |
+| **Gap detection** | Not in paper | `analysis/gap_analysis_agent.py`, HITL gap detection in GraphQAAgent | Working ✓ (new) |
+| **Ontology generation** | Not in paper | `analysis/ontology_generator.py` + OntologyExtender (HITL, SHACL, n10s) | Working ✓ (new) |
+| **Chain-of-Thought reasoning** | Not in paper | GraphQAAgent `agents/chain_of_thought.py` (GCR-inspired) | Working ✓ |
+| **Answer verification** | Not in paper | GraphQAAgent `agents/answer_verifier.py` (faithfulness scoring) | Working ✓ |
+| **Multi-turn chat** | Not in paper | GraphQAAgent `chat/` (SSE streaming, history, session management) | Working ✓ |
+| **HITL curation** | Not in paper | GraphQAAgent `hitl/` (change proposals, KG versioning, n10s) | Working ✓ |
+| **Streamlit frontend** | Not in paper | GraphQAAgent `frontend/` (Chat, KG Explorer, Ontology Browser) | Working ✓ |
+| **Evaluation framework** | Not in paper | GraphQAAgent `evaluation/` (DeepEval, LLM-as-judge, strategy benchmarking) | Working ✓ |
+| **LangSmith tracing** | Not in paper | GraphQAAgent `telemetry/langsmith.py` | Working ✓ |
+
+### 9.3  Remaining Gaps
+
+| Gap | Priority | Notes |
 |---|---|---|
-| Data acquisition (lens.org API) | Not yet implemented (KGPlatform processes local documents) | Gap: need API integration |
-| LLM-based NER (Llama 3.1/3.3) | KnowledgeGraphBuilder extraction (qwen3:8b, ontology-guided) | Working; uses OWL constraints instead of category list |
-| Entity resolution (normalisation + LLM) | KnowledgeGraphBuilder assembly (EntityResolver, ERRunner) | Working |
-| Neo4j KG construction | KnowledgeGraphBuilder storage (Neo4j + provenance) | Working |
-| Zipf's law validation | Not yet implemented | Gap: add to quality metrics |
-| KG-RAG (multi-prompt) | GraphQAAgent (4 strategies including hybrid_sota) | Working |
-| Semantic RE (high-weight pairs) | KnowledgeGraphBuilder extraction (LLM-guided RE) | Working; ontology-constrained |
+| **lens.org API integration** | Medium | OpenAlex covers most use cases; lens.org needed for patent literature |
+| **Fusion-specific `domain.yaml`** | High | GraphQAAgent is domain-neutral; needs fusion entity types, Cypher templates, demo questions to be configured for this KG |
+| **Load fusion OWL into Fuseki** | High | Ontology-expanded retrieval requires the TBox in Fuseki; use `output/fusion_ontology.owl` or `output/kgbuilder_input/ontology/fusion_ner.owl` |
+| **Populate Qdrant with full-text chunks** | High | Vector retrieval is currently empty; requires `data/fulltexts/` PDF pipeline → chunk → embed → Qdrant |
+| **KGPlatform submodule integration** | Medium | Plug this repo's analysis outputs (embeddings, gap reports) into GraphQAAgent's retrieval pipeline |
+| **Category-list-guided NER mode** | Low | Complementary to ontology-guided mode; useful for replicating Loreti et al. exactly |
+| **Evaluation dataset for fusion QA** | Medium | No domain-specific QA pairs yet; needed for systematic strategy comparison |
 
-**Gaps to close:**
-1. Add lens.org / Semantic Scholar / OpenAlex API integration for data acquisition.
-2. Add Zipf's law validation as a quality metric.
-3. Add the category-list-guided NER mode (complementary to ontology-guided).
+### 9.4  Quick Start: Fusion Stack
+
+```bash
+# 1. Start the full GraphQAAgent stack
+cd GraphQAAgent
+cp .env.example .env        # set NEO4J_URI to your running instance
+docker compose up -d --build
+# API: http://localhost:8002/docs
+
+# 2. Point it at the fusion KG Neo4j instance
+#    (edit .env: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
+
+# 3. Configure fusion domain
+cp config/domain.yaml config/domain_fusion.yaml
+# Edit domain_fusion.yaml with fusion entity types, Cypher templates (see §7.4)
+
+# 4. (Optional) Load fusion OWL into Fuseki for ontology-expanded retrieval
+#    Upload output/fusion_ontology.owl via Fuseki UI at http://localhost:3030
+
+# 5. Ask the first question
+curl -X POST http://localhost:8002/api/v1/qa/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What connects tokamak and stellarator research?",
+       "strategy": "hybrid"}'
+```
 
 ---
 
