@@ -227,7 +227,7 @@ Classical graph-theoretic metrics on the entity co-occurrence network.
 | Metric | Method |
 |--------|--------|
 | Degree distribution | Log-log histogram + power-law fit (Clauset-Shalizi-Newman) |
-| Centrality rankings | PageRank, betweenness (sampled), closeness, eigenvector |
+| Centrality rankings | PageRank (node importance), betweenness (bridge nodes, sampled), closeness (avg distance), eigenvector (spectral influence) |
 | Community detection | Louvain algorithm (resolution = 1.0) |
 | k-core decomposition | Coreness distribution + cumulative membership |
 | Clustering coefficients | Local clustering coefficient distribution |

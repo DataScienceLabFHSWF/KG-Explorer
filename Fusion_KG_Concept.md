@@ -204,12 +204,12 @@ The paper validates Zipf's law on entity frequency: $f(r) = C / r^\alpha$ where 
 
 | Centrality | Definition | Interpretation for Fusion KG |
 |---|---|---|
-| **Degree centrality** | $C_D(v) = \deg(v) / (|V| - 1)$ | Raw connectivity — which concepts appear with the most others? |
+| **Degree centrality** | $C_D(v) = \deg(v) / (\lvert V\rvert - 1)$ | Raw connectivity — which concepts appear with the most others? |
 | **Weighted degree** (strength) | $s(v) = \sum_{u} w(v,u)$ | Total co-occurrence weight — which concepts are most frequently discussed together with others? |
 | **Betweenness centrality** | $C_B(v) = \sum_{s \neq v \neq t} \frac{\sigma_{st}(v)}{\sigma_{st}}$ where $\sigma_{st}$ is the number of shortest paths from $s$ to $t$ and $\sigma_{st}(v)$ those passing through $v$ | **Bridge concepts** — entities that connect otherwise separate sub-communities (e.g., *divertor* bridging *plasma physics* and *materials engineering*).  High betweenness = interdisciplinary concept. |
-| **Closeness centrality** | $C_C(v) = \frac{|V| - 1}{\sum_u d(v, u)}$ | How quickly can you reach all other concepts from this one? Central concepts have short paths to everything. |
+| **Closeness centrality** | $C_C(v) = \frac{\lvert V\rvert - 1}{\sum_u d(v, u)}$ | How quickly can you reach all other concepts from this one? Central concepts have short paths to everything. |
 | **Eigenvector centrality** | $C_E(v) = \frac{1}{\lambda} \sum_u A_{vu} C_E(u)$ (eigenvector of adjacency matrix for largest eigenvalue $\lambda$) | Importance by association: a concept is important if it co-occurs with other important concepts.  Similar to PageRank but without damping. |
-| **PageRank** | $\text{PR}(v) = \frac{1-d}{|V|} + d \sum_{u \to v} \frac{\text{PR}(u)}{\deg^{\text{out}}(u)}$ with damping $d \approx 0.85$ | Recursive importance — identifies the "canonical" concepts.  On an undirected co-occurrence graph, this converges to a weighted degree-like measure but with propagation effects. |
+| **PageRank** | $\text{PR}(v) = \frac{1-d}{\lvert V\rvert} + d \sum_{u \to v} \frac{\text{PR}(u)}{\deg^{\text{out}}(u)}$ with damping $d \approx 0.85$ | Recursive importance — identifies the "canonical" concepts.  On an undirected co-occurrence graph, this converges to a weighted degree-like measure but with propagation effects. |
 
 **Implementation**: Neo4j GDS (Graph Data Science) library provides all of these as built-in algorithms callable via Cypher.  For the co-occurrence graph projected in-memory:
 
