@@ -42,6 +42,14 @@ tqdm>=4.66.0
 # Ontology generation
 rdflib>=7.0.0
 
+# Web frontend
+streamlit>=1.33.0
+
+# LLM-to-Cypher GraphRAG agent (GraphQAAgent pattern)
+langchain-neo4j>=0.3.0
+langchain-ollama>=0.2.0
+langchain-core>=0.3.0
+
 # Optional heavy GNN dependencies (uncomment to enable GraphSAGE)
 # torch>=2.2.0
 # torch-geometric>=2.5.0

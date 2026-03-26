@@ -20,6 +20,10 @@ services:
       timeout: 5s
       retries: 10
 
+  # Ollama runs locally (not in Docker).
+  # Start it with:  ollama serve
+  # Pull the model: ollama pull nemotron-mini-4b:latest
+
 volumes:
   neo4j_data:
   neo4j_logs:
