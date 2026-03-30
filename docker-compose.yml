@@ -3,8 +3,8 @@ services:
     image: neo4j:5.26.0-community
     container_name: fusion-neo4j
     ports:
-      - "7474:7474"   # Browser
-      - "7687:7687"   # Bolt
+      - "17474:7474"   # Browser
+      - "17687:7687"   # Bolt
     environment:
       NEO4J_AUTH: neo4j/fusion2026
       NEO4J_PLUGINS: '["graph-data-science", "apoc"]'
@@ -12,18 +12,10 @@ services:
       NEO4J_server_memory_heap_max__size: 1G
       NEO4J_server_memory_pagecache_size: 512m
     volumes:
-      - neo4j_data:/data
-      - neo4j_logs:/logs
+      - ~/docker/kg-explorer/neo4j/data:/data
+      - ~/docker/kg-explorer/neo4j/logs:/logs
     healthcheck:
       test: ["CMD", "neo4j", "status"]
       interval: 10s
       timeout: 5s
       retries: 10
-
-  # Ollama runs locally (not in Docker).
-  # Start it with:  ollama serve
-  # Pull the model: ollama pull nemotron-mini-4b:latest
-
-volumes:
-  neo4j_data:
-  neo4j_logs:
