@@ -301,6 +301,14 @@ class FusionCypherAgent:
             "error": error,
         }
 
+    @property
+    def driver(self):
+        return self._driver
+
+    @property
+    def db(self) -> str:
+        return self._db
+
     def schema_summary(self) -> str:
         """Return the Neo4j schema string loaded by LangChain."""
         return getattr(self._graph, "schema", None) or "(schema not loaded)"
