@@ -104,10 +104,30 @@ with st.sidebar:
     )
     ollama_model = st.text_input(
         "Model",
-        value=os.getenv("OLLAMA_MODEL", "nemotron-3-nano:4b"),
+        value=os.getenv("OLLAMA_MODEL", "nemotron:70b"),
         help="Must be pulled in Ollama first. Other options: mistral, llama3.1:8b, qwen2.5:7b",
         key="ollama_model",
     )
+
+    qa_mode = st.selectbox(
+        "QA mode",
+        options=["graph_qa", "semantic_qa"],
+        index=0,
+        key="qa_mode",
+        help="graph_qa: LLM generates Cypher and queries the KG. semantic_qa: embedding search over paper abstracts.",
+    )
+
+    if qa_mode == "semantic_qa":
+        qdrant_url = st.text_input(
+            "Qdrant URL",
+            value=os.getenv("QDRANT_URL", "http://localhost:6333"),
+            key="qdrant_url",
+        )
+        qdrant_collection = st.text_input(
+            "Collection",
+            value=os.getenv("QDRANT_COLLECTION", "fusion_papers"),
+            key="qdrant_collection",
+        )
 
     with st.expander("Setup instructions", expanded=False):
         st.markdown("""
@@ -164,7 +184,36 @@ def _get_agent(ollama_url: str, model: str):
 def get_agent():
     return _get_agent(
         st.session_state.get("ollama_url", "http://localhost:11434"),
-        st.session_state.get("ollama_model", "mistral"),
+        st.session_state.get("ollama_model", "nemotron:70b"),
+    )
+
+
+# ── Semantic QA agent (cached per Qdrant URL + collection + model) ─────────
+
+@st.cache_resource(
+    show_spinner="Loading embedding model and connecting to Qdrant (first run ~10 s)…"
+)
+def _get_semantic_agent(ollama_url: str, model: str, qdrant_url: str, collection: str):
+    """Build the SemanticQAAgent. Cached by (ollama_url, model, qdrant_url, collection)."""
+    try:
+        from analysis.semantic_qa import SemanticQAAgent
+        agent = SemanticQAAgent(
+            ollama_url=ollama_url,
+            model=model,
+            qdrant_url=qdrant_url,
+            collection=collection,
+        )
+        return agent, None
+    except Exception as exc:
+        return None, str(exc)
+
+
+def get_semantic_agent():
+    return _get_semantic_agent(
+        st.session_state.get("ollama_url", "http://localhost:11434"),
+        st.session_state.get("ollama_model", "nemotron:70b"),
+        st.session_state.get("qdrant_url", "http://localhost:6333"),
+        st.session_state.get("qdrant_collection", "fusion_papers"),
     )
 
 
@@ -183,6 +232,24 @@ def _history_for_llm() -> list[dict[str, str]]:
 
 # ── Message rendering ──────────────────────────────────────────────────────
 
+def _extract_entities_from_result(
+    context: list, linked: list
+) -> list:
+    """Collect entity name_norm strings from context rows and linked entities."""
+    names: set = set()
+    for name, _ in linked:
+        names.add(name)
+    for row in context:
+        for key in ("entity", "neighbour", "method"):
+            v = row.get(key)
+            if isinstance(v, str) and v:
+                names.add(v)
+        path = row.get("path_nodes")
+        if isinstance(path, list):
+            names.update(n for n in path if isinstance(n, str))
+    return list(names)
+
+
 def _render_assistant_msg(msg: dict):
     """Render an assistant message dict to the screen."""
     answer = msg.get("answer", "")
@@ -196,59 +263,91 @@ def _render_assistant_msg(msg: dict):
         st.error(f"**Error:** {error}")
         return
 
-    # ── Semantic entity linking results
-    if linked:
-        pills_html = "".join(
-            f'<span class="entity-pill">{name} '
-            f'<span class="entity-score">{score:.2f}</span></span>'
-            for name, score in linked
-        )
-        st.markdown(
-            f'<div style="margin-bottom:8px">'
-            f'<span style="font-size:0.78rem;color:#8b949e">🔗 Linked entities: </span>'
-            f'{pills_html}</div>',
-            unsafe_allow_html=True,
-        )
+    # graph_qa: split into answer (left) + graph panel (right)
+    graph_qa_mode = bool(cypher)
+    if graph_qa_mode:
+        col_answer, col_graph = st.columns([3, 2])
+    else:
+        col_answer = st
+        col_graph = None
 
-    # ── Answer text
-    st.markdown(f'<div class="answer-text">{answer}</div>', unsafe_allow_html=True)
-
-    # ── Metadata pills row
-    pills = []
-    if context:
-        pills.append(f"{len(context)} KG rows")
-    if cypher:
-        hop_hint = "multi-hop" if ("shortestPath" in cypher or "*.." in cypher) else "direct"
-        pills.append(hop_hint)
-    if fallback:
-        pills.append("⚡ fallback query")
-
-    if pills:
-        st.markdown(
-            " ".join(f'<span class="ctx-pill">{p}</span>' for p in pills),
-            unsafe_allow_html=True,
-        )
-
-    # ── Collapsible Cypher section
-    if cypher:
-        with st.expander("Generated Cypher", expanded=False):
+    with col_answer:
+        # ── Semantic entity linking results
+        if linked:
+            pills_html = "".join(
+                f'<span class="entity-pill">{name} '
+                f'<span class="entity-score">{score:.2f}</span></span>'
+                for name, score in linked
+            )
             st.markdown(
-                f'<div class="cypher-block">{cypher}</div>',
+                f'<div style="margin-bottom:8px">'
+                f'<span style="font-size:0.78rem;color:#8b949e">🔗 Linked entities: </span>'
+                f'{pills_html}</div>',
                 unsafe_allow_html=True,
             )
 
-    # ── Collapsible raw results
-    if context:
-        with st.expander(f"Raw graph results ({len(context)} rows)", expanded=False):
-            import pandas as pd
-            try:
-                st.dataframe(
-                    pd.DataFrame(context),
-                    use_container_width=True,
-                    hide_index=True,
+        # ── Answer text
+        st.markdown(f'<div class="answer-text">{answer}</div>', unsafe_allow_html=True)
+
+        # ── Metadata pills row
+        pills = []
+        if context:
+            pills.append(f"{len(context)} KG rows")
+        if cypher:
+            hop_hint = "multi-hop" if ("shortestPath" in cypher or "*.." in cypher) else "direct"
+            pills.append(hop_hint)
+        if fallback:
+            pills.append("⚡ fallback query")
+
+        if pills:
+            st.markdown(
+                " ".join(f'<span class="ctx-pill">{p}</span>' for p in pills),
+                unsafe_allow_html=True,
+            )
+
+        # ── Collapsible Cypher section
+        if cypher:
+            with st.expander("Generated Cypher", expanded=False):
+                st.markdown(
+                    f'<div class="cypher-block">{cypher}</div>',
+                    unsafe_allow_html=True,
                 )
-            except Exception:
-                st.json(context[:10])
+
+        # ── Collapsible raw results
+        if context:
+            with st.expander(f"Raw graph results ({len(context)} rows)", expanded=False):
+                import pandas as pd
+                try:
+                    st.dataframe(
+                        pd.DataFrame(context),
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+                except Exception:
+                    st.json(context[:10])
+
+    # ── Graph view panel (graph_qa only)
+    if col_graph is not None:
+        with col_graph:
+            entity_names = _extract_entities_from_result(context, linked)
+            if entity_names:
+                with st.expander("🕸 Graph View", expanded=False):
+                    try:
+                        import streamlit.components.v1 as components
+                        from analysis.graph_widget import build_context_graph_html
+                        agent, err = get_agent()
+                        if err:
+                            st.warning(f"Graph unavailable: {err}")
+                        else:
+                            html = build_context_graph_html(
+                                entity_names, agent.driver, agent.db
+                            )
+                            if html:
+                                components.html(html, height=480, scrolling=False)
+                            else:
+                                st.caption("No edges found for these entities.")
+                    except Exception as exc:
+                        st.warning(f"Graph unavailable: {exc}")
 
 
 # ── Session state ──────────────────────────────────────────────────────────
@@ -293,24 +392,40 @@ if query_text:
     with st.chat_message("user"):
         st.write(query_text)
 
-    # Run LLM agent
-    agent, init_error = get_agent()
+    # Run the appropriate agent
+    active_mode = st.session_state.get("qa_mode", "graph_qa")
 
     with st.chat_message("assistant"):
-        if init_error:
-            st.error(
-                f"**Could not connect to Ollama / Neo4j.**\n\n"
-                f"Error: `{init_error}`\n\n"
-                "Make sure Neo4j and Ollama are running, then reload the page."
-            )
-            msg = {"role": "assistant", "answer": "", "cypher": "", "context": [], "error": init_error}
+        if active_mode == "semantic_qa":
+            agent, init_error = get_semantic_agent()
+            if init_error:
+                st.error(
+                    f"**Could not initialise Semantic QA.**\n\n"
+                    f"Error: `{init_error}`\n\n"
+                    "Make sure Qdrant is running and the collection has been imported."
+                )
+                msg = {"role": "assistant", "answer": "", "cypher": "", "context": [], "error": init_error}
+            else:
+                with st.spinner("Embedding query → Qdrant search → Answer synthesis…"):
+                    llm_history = _history_for_llm()[:-1]
+                    result = agent.ask(query_text, history=llm_history)
+                _render_assistant_msg(result)
+                msg = {"role": "assistant", **result}
         else:
-            with st.spinner("Entity linking → Cypher generation → Graph query → Answer…"):
-                llm_history = _history_for_llm()[:-1]  # exclude the just-added user message
-                result = agent.ask(query_text, history=llm_history)
-
-            _render_assistant_msg(result)
-            msg = {"role": "assistant", **result}
+            agent, init_error = get_agent()
+            if init_error:
+                st.error(
+                    f"**Could not connect to Ollama / Neo4j.**\n\n"
+                    f"Error: `{init_error}`\n\n"
+                    "Make sure Neo4j and Ollama are running, then reload the page."
+                )
+                msg = {"role": "assistant", "answer": "", "cypher": "", "context": [], "error": init_error}
+            else:
+                with st.spinner("Entity linking → Cypher generation → Graph query → Answer…"):
+                    llm_history = _history_for_llm()[:-1]
+                    result = agent.ask(query_text, history=llm_history)
+                _render_assistant_msg(result)
+                msg = {"role": "assistant", **result}
 
     st.session_state["messages"].append(msg)
     st.rerun()
