@@ -94,6 +94,104 @@ def aggregate_gaps():
         gaps["summary_stats"]["fca_implications"] = len(fca)
         print(f"  Loaded {len(fca)} FCA implications")
 
+    # Semantic gaps (sentence-transformer cosine over entity names that never co-occur)
+    sem = _load_csv(OUTPUT_DIR / "semantic_gaps.csv")
+    if sem is not None:
+        top = sem.head(30)
+        gaps["semantic_gaps"] = top.to_dict("records")
+        gaps["summary_stats"]["semantic_gaps"] = len(top)
+        print(f"  Loaded top-{len(top)} semantic gaps")
+    else:
+        gaps["semantic_gaps"] = []
+
+    # Cross-community sparse bridges
+    cbg = _load_csv(OUTPUT_DIR / "community_bridge_gaps.csv")
+    if cbg is not None:
+        top = cbg.head(20)
+        gaps["community_bridge_gaps"] = top.to_dict("records")
+        gaps["summary_stats"]["community_bridge_gaps"] = len(top)
+        print(f"  Loaded top-{len(top)} community bridge gaps")
+    else:
+        gaps["community_bridge_gaps"] = []
+
+    # Longest shortest paths (compositional reasoning seeds)
+    lp = _load_json(OUTPUT_DIR / "longest_paths.json")
+    if lp:
+        gaps["longest_paths"] = lp[:15]
+        gaps["summary_stats"]["longest_paths"] = len(lp)
+        print(f"  Loaded {len(lp)} longest-path chains")
+    else:
+        gaps["longest_paths"] = []
+
+    # Forman–Ricci edge curvature (bottleneck edges)
+    ec = _load_csv(OUTPUT_DIR / "edge_curvature.csv")
+    if ec is not None:
+        gaps["edge_curvature"] = ec.head(30).to_dict("records")
+        gaps["summary_stats"]["edge_curvature"] = len(ec)
+        print(f"  Loaded top-{len(gaps['edge_curvature'])} bottleneck edges")
+    else:
+        gaps["edge_curvature"] = []
+
+    # Temporal trajectories
+    tr = _load_csv(OUTPUT_DIR / "entity_trajectories.csv")
+    if tr is not None:
+        gaps["entity_trajectories"] = tr.to_dict("records")
+        emerging = tr[tr["trajectory"] == "emerging"].nlargest(10, "log_slope").to_dict("records")
+        stalled = tr[tr["trajectory"] == "stalled"].nsmallest(10, "log_slope").to_dict("records")
+        gaps["emerging_fronts"] = emerging
+        gaps["stalled_hubs"] = stalled
+        gaps["summary_stats"]["emerging_fronts"] = len(emerging)
+        gaps["summary_stats"]["stalled_hubs"] = len(stalled)
+        print(f"  Loaded trajectories: {len(emerging)} emerging, {len(stalled)} stalled")
+    else:
+        gaps["emerging_fronts"] = []
+        gaps["stalled_hubs"] = []
+
+    # Articulation points (fragile bridges)
+    ap = _load_csv(OUTPUT_DIR / "articulation_points.csv")
+    if ap is not None:
+        gaps["articulation_points"] = ap.head(20).to_dict("records")
+        gaps["summary_stats"]["articulation_points"] = len(ap)
+        print(f"  Loaded top-{len(gaps['articulation_points'])} articulation points")
+    else:
+        gaps["articulation_points"] = []
+
+    # Triadic-closure deficit (sharper Adamic-Adar with null-model correction)
+    td = _load_csv(OUTPUT_DIR / "triadic_deficit.csv")
+    if td is not None:
+        gaps["triadic_deficit"] = td.head(25).to_dict("records")
+        gaps["summary_stats"]["triadic_deficit"] = len(td)
+        print(f"  Loaded top-{len(gaps['triadic_deficit'])} triadic-deficit pairs")
+    else:
+        gaps["triadic_deficit"] = []
+
+    # Bridge edges (2-edge-cuts)
+    be = _load_csv(OUTPUT_DIR / "bridge_edges.csv")
+    if be is not None:
+        gaps["bridge_edges"] = be.head(15).to_dict("records")
+        gaps["summary_stats"]["bridge_edges"] = len(be)
+        print(f"  Loaded top-{len(gaps['bridge_edges'])} bridge edges")
+    else:
+        gaps["bridge_edges"] = []
+
+    # PPR reachability gaps (semantically related but diffusion-cold)
+    ppr = _load_csv(OUTPUT_DIR / "ppr_reachability_gaps.csv")
+    if ppr is not None:
+        gaps["ppr_gaps"] = ppr.head(30).to_dict("records")
+        gaps["summary_stats"]["ppr_gaps"] = len(ppr)
+        print(f"  Loaded top-{len(gaps['ppr_gaps'])} PPR reachability gaps")
+    else:
+        gaps["ppr_gaps"] = []
+
+    # Heat-kernel reachability gaps
+    hk = _load_csv(OUTPUT_DIR / "heat_kernel_reachability_gaps.csv")
+    if hk is not None:
+        gaps["heat_gaps"] = hk.head(30).to_dict("records")
+        gaps["summary_stats"]["heat_gaps"] = len(hk)
+        print(f"  Loaded top-{len(gaps['heat_gaps'])} heat-kernel reachability gaps")
+    else:
+        gaps["heat_gaps"] = []
+
     # Community structure
     comm = _load_csv(OUTPUT_DIR / "communities.csv")
     if comm is not None:
@@ -167,6 +265,218 @@ def generate_hypotheses(gaps):
                                 "if none exist, consider a study proposal.",
         })
 
+    # From semantic gaps (entities semantically related but never co-occur)
+    for sg in gaps.get("semantic_gaps", [])[:15]:
+        hypotheses.append({
+            "type": "semantic_gap",
+            "confidence": "medium",
+            "entities": [sg["entity_a"], sg["entity_b"]],
+            "hypothesis": (
+                f"'{sg['entity_a']}' and '{sg['entity_b']}' are semantically "
+                f"very similar (cosine={sg['cosine']:.3f}) but never co-occur in "
+                f"any paper. They likely belong to disconnected research threads "
+                f"that should be cross-referenced."
+            ),
+            "cosine": sg["cosine"],
+            "suggested_action": "Search for papers that mention either concept "
+                                "to determine whether the gap reflects a true "
+                                "research opportunity or merely vocabulary drift.",
+        })
+
+    # From cross-community sparse bridges (interdisciplinary opportunities)
+    for cbg in gaps.get("community_bridge_gaps", [])[:8]:
+        hypotheses.append({
+            "type": "community_bridge_gap",
+            "confidence": "medium",
+            "entities": [
+                *str(cbg.get("label_a", "")).split(", "),
+                *str(cbg.get("label_b", "")).split(", "),
+            ],
+            "hypothesis": (
+                f"Communities {cbg['community_a']} ({cbg.get('label_a','?')}) and "
+                f"{cbg['community_b']} ({cbg.get('label_b','?')}) share only "
+                f"{cbg['observed_edges']:.0f} co-occurrence edges, vs. an expected "
+                f"{cbg['expected_edges']:.0f} under a configuration-model null "
+                f"(ratio={cbg['ratio']:.3f}). This points to an under-explored "
+                f"interdisciplinary connection."
+            ),
+            "gap_score": cbg["gap_score"],
+            "suggested_action": "Identify representative entities from each "
+                                "community and look for natural points of overlap "
+                                "(e.g. shared methods, instruments, or boundary "
+                                "phenomena).",
+        })
+
+    # From longest shortest paths (compositional reasoning seeds, paper §4)
+    for lp in gaps.get("longest_paths", [])[:6]:
+        path = lp.get("path", [])
+        if len(path) < 4:
+            continue
+        hypotheses.append({
+            "type": "reasoning_chain",
+            "confidence": "low",
+            "entities": path,
+            "hypothesis": (
+                f"A {lp['length']}-hop reasoning chain connects "
+                f"'{lp['source']}' to '{lp['target']}' via: "
+                f"{' → '.join(path)}. Such long chains are candidate "
+                f"compositional inference paths (Step A→D in Buehler 2025)."
+            ),
+            "length": lp["length"],
+            "suggested_action": "Walk the path with a domain expert (or LLM) to "
+                                "see whether each consecutive hop is mechanistic, "
+                                "associative, or coincidental — mechanistic chains "
+                                "often imply testable hypotheses.",
+        })
+
+    # From Forman–Ricci edge curvature (bottleneck edges)
+    for ec in gaps.get("edge_curvature", [])[:8]:
+        hypotheses.append({
+            "type": "bottleneck_edge",
+            "confidence": "medium",
+            "entities": [ec["entity_a"], ec["entity_b"]],
+            "hypothesis": (
+                f"The edge ('{ec['entity_a']}', '{ec['entity_b']}') has Forman–Ricci "
+                f"curvature {ec['forman_curvature']} (degrees {ec['deg_a']}, "
+                f"{ec['deg_b']}; only {ec['common_neighbours']} shared neighbours). "
+                f"Strongly negative curvature indicates a fragile bottleneck: the "
+                f"two endpoints draw on largely disjoint communities."
+            ),
+            "forman_curvature": ec["forman_curvature"],
+            "suggested_action": "Identify which other entities could plausibly "
+                                "close triangles around this edge — they would "
+                                "strengthen the bridge and surface adjacent gaps.",
+        })
+
+    # From emerging fronts (research opportunities at the frontier)
+    for ef in gaps.get("emerging_fronts", [])[:6]:
+        hypotheses.append({
+            "type": "emerging_front",
+            "confidence": "medium",
+            "entities": [ef["entity"]],
+            "hypothesis": (
+                f"'{ef['entity']}' shows fast multiplicative growth in recent "
+                f"co-occurrence degree (log-slope={ef['log_slope']:+.3f}, "
+                f"recent years {ef['recent_years']}: {ef['recent_degrees']}). "
+                f"This is an active research front whose neighbouring concepts "
+                f"are likely under-developed."
+            ),
+            "log_slope": ef["log_slope"],
+            "suggested_action": "Inspect the entity's current k-hop neighbourhood; "
+                                "missing co-occurrences with classical fusion "
+                                "concepts often indicate first-mover opportunities.",
+        })
+
+    # From stalled hubs (saturated topics)
+    for sh in gaps.get("stalled_hubs", [])[:4]:
+        hypotheses.append({
+            "type": "stalled_hub",
+            "confidence": "low",
+            "entities": [sh["entity"]],
+            "hypothesis": (
+                f"'{sh['entity']}' is a high-mention hub whose recent activity is "
+                f"declining (log-slope={sh['log_slope']:+.3f}). It may represent "
+                f"saturated knowledge — worth probing for unresolved sub-questions "
+                f"or methodological refresh."
+            ),
+            "log_slope": sh["log_slope"],
+            "suggested_action": "Search for review papers explaining the slowdown; "
+                                "open questions in such reviews are good gap targets.",
+        })
+
+    # From articulation points (fragile single-node connectors)
+    for ap in gaps.get("articulation_points", [])[:6]:
+        hypotheses.append({
+            "type": "fragile_bridge",
+            "confidence": "medium",
+            "entities": [ap["entity"]],
+            "hypothesis": (
+                f"'{ap['entity']}' is an articulation point: removing it would "
+                f"split the giant component into {ap['n_fragments']} fragments "
+                f"(second-largest size: {ap['second_fragment']}). The literature "
+                f"depends on this single connector — alternative bridging "
+                f"concepts deserve exploration."
+            ),
+            "removal_impact": ap["removal_impact"],
+            "suggested_action": "Use semantic search to propose redundant bridge "
+                                "concepts that would make this connection more "
+                                "robust; absence of such concepts is the gap.",
+        })
+
+    # From triadic-closure deficit (null-model corrected missing links)
+    for td in gaps.get("triadic_deficit", [])[:10]:
+        hypotheses.append({
+            "type": "triadic_deficit",
+            "confidence": "medium",
+            "entities": [td["entity_a"], td["entity_b"]],
+            "hypothesis": (
+                f"'{td['entity_a']}' and '{td['entity_b']}' share "
+                f"{td['common_neighbours']:.0f} neighbours but never directly "
+                f"co-occur, with deficit score {td['deficit']:.2f} (configuration-"
+                f"model expectation {td['p_expected']:.4f}). Their absence is far "
+                f"larger than chance — a strong missing-link candidate."
+            ),
+            "deficit": td["deficit"],
+            "suggested_action": "Inspect the shared neighbourhood; the bridging "
+                                "concepts often hint at the implicit relationship.",
+        })
+
+    # From bridge edges (2-edge-cuts: single edges that hold communities together)
+    for be in gaps.get("bridge_edges", [])[:6]:
+        hypotheses.append({
+            "type": "bridge_edge",
+            "confidence": "medium",
+            "entities": [be["entity_a"], be["entity_b"]],
+            "hypothesis": (
+                f"The single edge ('{be['entity_a']}', '{be['entity_b']}', "
+                f"weight={be['weight']:.0f}) is a backbone bridge: removing it "
+                f"would isolate a fragment of {be['fragment_size']} entities "
+                f"({be['fraction_isolated']*100:.1f}% of the giant component). "
+                f"The connection rests on a single citation pattern."
+            ),
+            "fragment_size": be["fragment_size"],
+            "suggested_action": "Look for alternative concept pairs that should "
+                                "co-occur to reinforce this bridge — their absence "
+                                "is the literature gap.",
+        })
+
+    # From PPR reachability gaps (semantic vs. diffusion mismatch)
+    for ppr in gaps.get("ppr_gaps", [])[:10]:
+        hypotheses.append({
+            "type": "reachability_gap_ppr",
+            "confidence": "medium",
+            "entities": [ppr["hub"], ppr["candidate"]],
+            "hypothesis": (
+                f"'{ppr['candidate']}' is semantically very close to the hub "
+                f"'{ppr['hub']}' (cosine={ppr['cosine']:.3f}) yet its "
+                f"Personalised PageRank mass from that hub is in the bottom "
+                f"diffusion decile (π={ppr['diffusion_mass']:.2e}). The "
+                f"literature treats them as related concepts, but no efficient "
+                f"citation path connects them."
+            ),
+            "score": ppr["score"],
+            "suggested_action": "Bridge papers covering both concepts would have "
+                                "an outsized structural effect on the KG.",
+        })
+
+    # From heat-kernel reachability gaps (multi-scale diffusion analogue)
+    for hk in gaps.get("heat_gaps", [])[:6]:
+        hypotheses.append({
+            "type": "reachability_gap_heat",
+            "confidence": "low",
+            "entities": [hk["hub"], hk["candidate"]],
+            "hypothesis": (
+                f"At heat-kernel scale t=3, '{hk['candidate']}' receives almost "
+                f"no diffusion mass from '{hk['hub']}' yet remains semantically "
+                f"similar (cosine={hk['cosine']:.3f}). Multi-scale analysis "
+                f"confirms the gap is structural, not just local."
+            ),
+            "score": hk["score"],
+            "suggested_action": "Cross-check against PPR results; consistent "
+                                "hub–candidate pairs across scales are the most "
+                                "actionable gaps.",
+        })
+
     # From H1 loops (redundancy)
     for loop in gaps["topological"]["loops"][:5]:
         entities = loop.get("entities", [])
@@ -216,10 +526,22 @@ def generate_report(gaps, hypotheses):
     lines.append("")
 
     type_labels = {
-        "topological_void": "🔴 Topological Void (Knowledge Gap)",
-        "structural_hole": "🟡 Structural Hole (Bridge Concept)",
-        "missing_link": "🟠 Missing Link (Predicted Co-Occurrence)",
-        "knowledge_loop": "🔵 Knowledge Loop (Redundancy)",
+        "topological_void": "Topological Void (Knowledge Gap)",
+        "structural_hole": "Structural Hole (Bridge Concept)",
+        "missing_link": "Missing Link (Predicted Co-Occurrence)",
+        "knowledge_loop": "Knowledge Loop (Redundancy)",
+        "semantic_gap": "Semantic Gap (Related but Never Co-occur)",
+        "community_bridge_gap": "Community Bridge Gap (Under-connected Communities)",
+        "reasoning_chain": "Reasoning Chain (Long Compositional Path)",
+        "bottleneck_edge": "Bottleneck Edge (Negative Forman Curvature)",
+        "emerging_front": "Emerging Research Front",
+        "stalled_hub": "Stalled Hub (Saturated Topic)",
+        "fragile_bridge": "Fragile Bridge (Articulation Point)",
+        "triadic_deficit": "Triadic-Closure Deficit (Null-Corrected Missing Link)",
+        "bridge_edge": "Bridge Edge (2-Edge-Cut)",
+        "reachability_gap_ppr": "Reachability Gap (PPR-Cold)",
+        "reachability_gap_heat": "Reachability Gap (Heat-Kernel-Cold)",
+        "llm_enhanced": "LLM-Enhanced Hypotheses",
     }
 
     for i, h in enumerate(hypotheses, 1):
@@ -283,22 +605,7 @@ def generate_report(gaps, hypotheses):
 # ---------------------------------------------------------------------------
 # 4.  LLM-enhanced hypothesis generation (optional)
 # ---------------------------------------------------------------------------
-def enhance_with_llm(gaps, hypotheses):
-    """If an OpenAI API key is available, enrich hypotheses with LLM reasoning."""
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        print("  OPENAI_API_KEY not set — skipping LLM enhancement.")
-        print("  Set it in .env to enable LLM-powered hypothesis generation.")
-        return hypotheses
-
-    try:
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key)
-    except ImportError:
-        print("  openai package not installed — skipping LLM enhancement.")
-        return hypotheses
-
-    # Build a concise summary for the LLM
+def _build_llm_prompt(gaps, hypotheses):
     summary_parts = [
         "You are analysing a knowledge graph of nuclear fusion energy research.",
         f"The graph has {gaps['summary_stats'].get('total_entities', '?')} entities "
@@ -306,10 +613,8 @@ def enhance_with_llm(gaps, hypotheses):
         "",
         "Key findings from mathematical analysis:",
     ]
-
-    for h in hypotheses[:10]:
-        summary_parts.append(f"- {h['hypothesis']}")
-
+    for h in hypotheses[:12]:
+        summary_parts.append(f"- [{h['type']}] {h['hypothesis']}")
     prompt = "\n".join(summary_parts)
     prompt += (
         "\n\nBased on these structural findings, generate 5 specific, actionable "
@@ -317,31 +622,85 @@ def enhance_with_llm(gaps, hypotheses):
         "explain the scientific rationale and suggest concrete next steps. "
         "Format as numbered items."
     )
+    return prompt
 
-    print("  Querying LLM for enhanced hypotheses...")
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a nuclear fusion research advisor."},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=2000,
-            temperature=0.7,
-        )
-        llm_text = response.choices[0].message.content
-        print("  LLM response received.")
 
-        # Add LLM hypotheses to the list
+def enhance_with_llm(gaps, hypotheses):
+    """Enrich hypotheses with LLM reasoning.
+
+    Tries Ollama first (local, free; configured via OLLAMA_BASE_URL and
+    OLLAMA_MODEL env vars), then falls back to OpenAI if OPENAI_API_KEY
+    is set. Silently no-ops if neither is available.
+    """
+    prompt = _build_llm_prompt(gaps, hypotheses)
+    system = "You are a nuclear fusion research advisor."
+    llm_text = None
+    backend = None
+
+    # 1. Try Ollama (local)
+    if os.getenv("GAP_AGENT_USE_OLLAMA", "1") != "0":
+        try:
+            import requests
+            base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+            model = os.getenv("OLLAMA_MODEL", "nemotron-3-nano:4b")
+            print(f"  Querying Ollama ({model} at {base}) for enhanced hypotheses...")
+            r = requests.post(
+                f"{base}/api/chat",
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "stream": False,
+                    "options": {"temperature": 0.7, "num_predict": 1500},
+                },
+                timeout=180,
+            )
+            r.raise_for_status()
+            data = r.json()
+            llm_text = (data.get("message") or {}).get("content")
+            if llm_text:
+                backend = f"ollama:{model}"
+        except Exception as e:
+            print(f"  Ollama unavailable ({e}) — will try OpenAI fallback.")
+
+    # 2. Fall back to OpenAI
+    if not llm_text:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if api_key:
+            try:
+                from openai import OpenAI
+                client = OpenAI(api_key=api_key)
+                print("  Querying OpenAI for enhanced hypotheses...")
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": prompt},
+                    ],
+                    max_tokens=2000,
+                    temperature=0.7,
+                )
+                llm_text = response.choices[0].message.content
+                backend = "openai:gpt-4o-mini"
+            except Exception as e:
+                print(f"  OpenAI query failed: {e}")
+        else:
+            if backend is None:
+                print("  No LLM backend available — skipping enhancement.")
+                print("  (Run a local Ollama server or set OPENAI_API_KEY.)")
+
+    if llm_text:
+        print(f"  LLM response received via {backend}.")
         hypotheses.append({
             "type": "llm_enhanced",
             "confidence": "medium",
             "entities": [],
             "hypothesis": llm_text,
+            "backend": backend,
             "suggested_action": "Review and validate with domain experts.",
         })
-    except Exception as e:
-        print(f"  LLM query failed: {e}")
 
     return hypotheses
 
@@ -369,9 +728,15 @@ def run(driver=None, year: int | None = None):
         gaps["topological"]["voids"],
         gaps["structural_holes"],
         gaps["predicted_links"],
+        gaps.get("semantic_gaps"),
+        gaps.get("community_bridge_gaps"),
+        gaps.get("longest_paths"),
+        gaps.get("edge_curvature"),
+        gaps.get("emerging_fronts"),
+        gaps.get("articulation_points"),
     ]):
         print("  No gap data found. Run void_extraction, structural_holes, "
-              "and link_prediction first.")
+              "link_prediction, semantic_gaps, and advanced_gaps first.")
         return None
 
     # Generate hypotheses

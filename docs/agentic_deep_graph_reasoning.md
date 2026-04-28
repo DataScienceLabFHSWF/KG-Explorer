@@ -107,3 +107,92 @@ Then add a small experimental recursive run mode in `analysis/llm_graph_qa.py` t
 - repeats for N iterations
 
 That would bring our KG evaluation much closer to the paper’s agentic reasoning approach.
+
+---
+
+## Implementation status — gap-detection extensions
+
+We have implemented two new analysis modules that operationalise several of the ideas above. The full pipeline now produces eleven distinct gap types, aggregated into a single hypothesis report.
+
+### Module: `analysis/semantic_gaps.py`
+
+Two complementary detectors:
+
+1. **Semantic non-co-occurrence** — sentence-transformer cosine over the existing entity-linker cache. Pairs in the cosine band `[0.55, 0.80]` that never appear together in a paper become candidate gaps. The upper bound discards near-synonyms (plurals, hyphenation, unicode and Greek-letter variants, word-order permutations) which are aggressively filtered. Output: `output/semantic_gaps.csv`.
+2. **Cross-community sparse bridges** — for every pair of Louvain communities ≥ 20 entities, we compare observed inter-community edge weight against the configuration-model expectation `(deg_i · deg_j) / 2m` and flag pairs with large positive `expected − observed`. Communities are labelled by their three highest-PageRank entities. Output: `output/community_bridge_gaps.csv`.
+
+### Module: `analysis/advanced_gaps.py`
+
+Four mathematically distinct detectors, each producing its own CSV/JSON output and feeding hypothesis cards to the gap agent.
+
+| # | Method | Mathematics | Output | Hypothesis type |
+|---|---|---|---|---|
+| 1 | Longest shortest paths (Buehler 2025 §4) | BFS sample of `O(sample · V)` from random sources in the giant component; longest pairs become Step A→D reasoning seeds | `longest_paths.json` | `reasoning_chain` |
+| 2 | Forman–Ricci edge curvature | `κ_F(u,v) = 4 − deg(u) − deg(v) + 3·|N(u) ∩ N(v)|`; we filter to balanced edges (max-deg/min-deg ≤ 5) so the result is not just hub-spoke noise | `edge_curvature.csv` | `bottleneck_edge` |
+| 3 | Temporal hub trajectories (Buehler 2025 §5) | Per-year weighted degree pulled from `CO_OCCURS_WITH.papers`, log-slope over the last 5 years (last calendar year dropped to avoid partial-crawl bias), classified `emerging` / `stable` / `stalled` at ±0.5 σ | `entity_trajectories.csv` | `emerging_front`, `stalled_hub` |
+| 4 | Articulation points (Tarjan 1972, Buehler 2025 §6) | Run on the *backbone* graph (edges with weight ≥ 2) so we get genuine cut vertices, not random hub artefacts; ranked by size of the second-largest fragment that appears after removal | `articulation_points.csv` | `fragile_bridge` |
+
+A shared `_is_noisy_entity()` helper drops year-strings, dates, and pure-numeric NER artefacts before any structural analysis to keep results interpretable.
+
+### Updated module: `analysis/gap_analysis_agent.py`
+
+- Aggregator now loads all six new outputs alongside the existing TDA / structural-hole / link-prediction / FCA results.
+- `generate_hypotheses()` emits six new hypothesis types (`semantic_gap`, `community_bridge_gap`, `reasoning_chain`, `bottleneck_edge`, `emerging_front`, `stalled_hub`, `fragile_bridge`).
+- LLM enrichment now tries **local Ollama first** (`OLLAMA_BASE_URL`, `OLLAMA_MODEL`, defaults match the chat agent), then falls back to OpenAI, then no-ops cleanly. The chosen `backend` is recorded on the LLM hypothesis card.
+- `gap_report.md` rendering knows the new emoji labels.
+
+### Pipeline order
+
+`run_analysis.py` registers two new modules in dependency order:
+
+```
+graph → tda → spectral → fca → information → voids → holes → links →
+explorer → semgaps → advgaps → gaps → zipf → ontology → communities → embeddings
+```
+
+The first run-through can be done with:
+
+```
+python run_analysis.py --only graph holes links semgaps advgaps gaps
+```
+
+This requires:
+- `output/communities.csv` (from `graph`) for community-bridge gaps
+- `output/centralities.csv` (from `graph`) for community labels
+- `output/entity_linker_cache.pkl` (built lazily by the chat app or `EntityLinker(...)` constructor) for semantic gaps
+
+### Current run statistics
+
+After running the new modules end-to-end against the 50,595-node KG:
+
+| Detector | Count |
+|---|---|
+| Semantic gaps (cosine ∈ [0.55, 0.80]) | 200 |
+| Community bridge gaps | 100 |
+| Longest reasoning chains | 25 (length 5 hops) |
+| Forman bottleneck edges (balanced) | 200 |
+| Emerging entities | 30 |
+| Stalled entities | 30 |
+| Articulation points (backbone w ≥ 2) | 391 found, top 100 reported |
+| Triadic-closure deficit pairs | 200 |
+| Bridge edges (2-edge-cuts on backbone) | 933 found, top 100 reported |
+| PPR reachability gaps (25 hubs) | 33 |
+| Heat-kernel reachability gaps (25 hubs, t=3) | 11 |
+
+Total hypothesis cards emitted by the gap agent: **123 across 15 categories**, persisted to `output/gap_report.json` and `output/gap_report.md`.
+
+### Mathematical methods *not yet* implemented but considered
+
+These rank next in usefulness vs. cost:
+
+- **Degree-corrected SBM residuals** — strictly stronger than the configuration-null `community_bridge_gaps` but requires `graspologic` and several minutes of compute.
+- **Multi-scale heat-kernel sweeps** — currently only `t=3` is reported; sweeping `t ∈ {1, 5, 20}` would expose local-vs-global gap regimes but multiplies runtime per hub.
+- **Ollivier–Ricci curvature** — complementary to the cheap Forman variant we already use, but each edge requires solving an optimal-transport sub-problem (`GraphRicciCurvature` package).
+- **Hyperbolic embedding distortion** — maps the KG into hyperbolic space and flags entities whose embedding distortion exceeds chance; useful for hierarchical fields but requires a fresh embedding pipeline.
+
+#### Implemented since the previous draft
+
+- ✅ **Personalised PageRank reachability gaps** — `analysis/diffusion_gaps.py::detect_reachability_gaps(diffusion="ppr")` → `output/ppr_reachability_gaps.csv`
+- ✅ **Heat-kernel diffusion** — same module, `diffusion="heat"` (uses `scipy.sparse.linalg.expm_multiply` against the symmetric normalised Laplacian) → `output/heat_kernel_reachability_gaps.csv`
+- ✅ **Triadic-closure deficit** — `analysis/advanced_gaps.py::detect_triadic_closure_deficit()` → `output/triadic_deficit.csv`
+- ✅ **2-edge-cuts (bridges)** — `analysis/advanced_gaps.py::detect_bridge_edges()` (uses `nx.bridges()` on the backbone graph) → `output/bridge_edges.csv`

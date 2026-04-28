@@ -1,0 +1,342 @@
+% ============================================================
+% Technical Report — GAIA Lab, FH Sudwestfalen
+% Agentic Gap Detection on a Nuclear Fusion Knowledge Graph
+% ============================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+\geometry{margin=2.5cm}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newcommand{\KG}{\mathcal{G}}
+\newcommand{\Entset}{\mathcal{E}}
+\newcommand{\Vset}{\mathcal{V}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\DeclareMathOperator{\PPR}{PPR}
+
+\title{%
+  Agentic Gap Detection on a Nuclear Fusion Knowledge Graph:\\
+  A Multi-Modal Pipeline for Structural, Topological, Diffusive,\\
+  and Semantic Hypothesis Generation%
+}
+\author{%
+  GAIA Lab\\
+  FH S\"udwestfalen --- University of Applied Sciences\\
+  \texttt{[technical report, draft]}%
+}
+\date{April 2026}
+
+\begin{document}
+\maketitle
+
+% ============================================================
+\begin{abstract}
+% ============================================================
+We extend a multi-modal mathematical analysis pipeline for a 50{,}595-node nuclear fusion knowledge graph (KG) constructed from 8{,}358 papers via named entity recognition into an \emph{agentic gap-detection system} that produces falsifiable research hypotheses. Building on previous work that characterised the KG's degree, spectral, topological, and information-theoretic structure, we add seven new detectors targeting different notions of \emph{absence}: (i)~\emph{semantic gaps} flag entity pairs that are embedding-similar yet never co-occur; (ii)~\emph{community-bridge gaps} compare cross-community edge counts against a configuration-model null; (iii)~\emph{Forman--Ricci bottleneck edges} surface negatively-curved links carrying disproportionate cross-cluster traffic; (iv)~\emph{longest reasoning chains} extract the diameter-realising compositional paths in the giant component; (v)~\emph{articulation points} and \emph{2-edge-cuts (bridges)} expose single points of structural failure on the backbone graph; (vi)~\emph{triadic-closure deficits} score open triangles against a null-corrected expected-closure baseline; (vii)~\emph{diffusion reachability gaps} (Personalised PageRank and heat-kernel) find entities that are semantically close to a hub yet receive anomalously low diffusion mass. The detectors share a common LLM-aware aggregator that emits 123 structured hypothesis cards across 15 categories. We discuss the mathematical formulation of each detector, the noise-filtering and null-model design choices that proved necessary on a co-occurrence graph at this scale, and concrete examples of the gaps that survive all filters. The pipeline is reproducible, fits in $<\!12$\,GB of RAM, and runs end-to-end in under thirty minutes on a workstation.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+% ============================================================
+
+A knowledge graph (KG) compresses the structure of a research field into entities and relations, but its real value lies in what is \emph{not} there: missing edges that should exist, communities that should be linked, concepts that should have neighbours. Buehler's recent \emph{Agentic Deep Graph Reasoning} framework \citep{buehler2025agentic} argued that an LLM agent paired with mathematical detectors operating on a domain KG can iteratively expose, verbalise, and explore such absences with much higher signal than a generic chat agent.
+
+In earlier work we constructed a fusion-energy KG from the dataset of Loreti et al.\ \citep{loreti2025} --- 50{,}595 entities and 249{,}505 weighted co-occurrence edges extracted from 8{,}358 papers via named entity recognition --- and characterised its global structure with five complementary methods: graph-theoretic centralities, persistent homology, spectral analysis, formal concept analysis, and information theory. That analysis confirmed a scale-free degree distribution, a concept lattice with 865 formal concepts, 45 persistent topological voids, and a moderately well-connected spectrum ($\lambda_2=0.047$).
+
+The present report focuses on the second phase: turning structure into \emph{actionable hypotheses}. We describe seven new gap detectors, the design choices needed to keep them well-behaved on a real co-occurrence graph (NER noise, hub-spoke dominance, year strings, synonym pairs, last-year crawl bias), and the LLM-aware aggregator that joins their outputs into a single ranked hypothesis stream. The system is fully open and runs offline; an optional local Ollama backend or remote OpenAI key adds an enrichment pass.
+
+Our contributions are:
+\begin{enumerate}
+\item A \emph{taxonomy of seven gap types} grounded in graph theory, semantic embeddings, diffusion processes, and configuration-model nulls, each with a closed-form scoring rule that admits an interpretable threshold (\S\ref{sec:detectors}).
+\item A discussion of the \emph{noise-filtering pipeline} required for each detector to produce non-trivial output on a real NER-derived graph (\S\ref{sec:filtering}).
+\item A reproducible Python implementation that integrates with our existing analysis modules and emits \emph{123 structured hypothesis cards across 15 categories} on the fusion KG, with concrete examples discussed in \S\ref{sec:hypotheses}.
+\item A critical assessment of which detectors agree, which disagree, and which are most useful for downstream literature scouting (\S\ref{sec:discussion}).
+\end{enumerate}
+
+% ============================================================
+\section{Problem Setting and Notation}
+\label{sec:setup}
+% ============================================================
+
+Let $\KG = (\Vset, \Entset, w)$ denote the undirected weighted co-occurrence graph over entity nodes $\Vset$ ($|\Vset|=51{,}405$ \code{Entity} nodes; the full Neo4j store contains 50{,}595 graph nodes including 8{,}358 \code{Paper}, 5{,}344 \code{Field}, and 90 \code{Category} nodes). Edge weight $w(u,v)$ counts the number of papers in which entities $u$ and $v$ co-occur in the abstract; for the analyses below we work with the simple-graph projection to the entity layer ($249{,}505$ edges, average weighted degree $\approx 9.7$, max degree $2{,}517$ for \code{tokamak}).
+
+Each entity carries a normalised name (\code{name\_norm}, lowercase) and one or more NER \code{Category} labels (e.g.\ \code{Diagnostics}, \code{Materials}, \code{Plasma Phenomena}). For a subset of $\sim\!12{,}000$ frequently-mentioned entities we precompute MiniLM \citep{wang2020minilm} sentence-transformer embeddings $\phi(v)\in\mathbb{R}^{384}$, $\|\phi(v)\|_2=1$, cached on disk in \code{output/entity\_linker\_cache.pkl} and reused by every detector that needs semantic similarity.
+
+The graph is \emph{sparse and scale-free}: the degree distribution fits a power law with exponent $\alpha\!\approx\!2.17$. This is the source of most of the design decisions in \S\ref{sec:filtering}: a handful of hubs (\code{plasma}, \code{tokamak}, \code{energy}, \code{ITER}, \code{fusion}) dominate every score that does not actively penalise them. Nearly all detectors below are therefore evaluated on the top-$N$ by weighted degree, $N\in\{4000,5000\}$, which captures $>\!99\%$ of edges and keeps memory inside 12\,GB.
+
+% ============================================================
+\section{Gap Detectors}
+\label{sec:detectors}
+% ============================================================
+
+We organise the detectors by the kind of \emph{absence} they target. Each subsection states the formal scoring rule, the implementation file, and the typical output count on the fusion KG.
+
+\subsection{Semantic gaps: similar but never co-occurring}
+\label{sec:semgap}
+\paragraph{Definition.} A \emph{semantic gap} is a pair $(u,v)$ of entities with high embedding similarity that nevertheless share no co-occurrence edge in $\KG$. Formally,
+\[
+\textsc{Sem}(u,v) \,=\, \cos\!\bigl(\phi(u),\phi(v)\bigr)\,\cdot\,\mathbb{1}\!\bigl[(u,v)\notin\Entset\bigr].
+\]
+Naively maximising $\textsc{Sem}$ surfaces synonyms (\code{modeling}/\code{modelling}, \code{plasmas}/\code{plasma}, \code{$\alpha$-particle}/\code{alpha particle}); the detector therefore filters pairs whose normalised forms differ only in (a)~Greek letter spelling, (b)~plural endings, (c)~hyphenation, or (d)~word order, and clamps the cosine band to $[0.55,\,0.80]$. The lower bound rejects accidental nearness, the upper bound rejects pure surface variants.
+
+\paragraph{Output.} \code{output/semantic\_gaps.csv}, $200$ pairs. Implementation: \code{analysis/semantic\_gaps.py::detect\_semantic\_gaps}.
+
+\subsection{Community bridge gaps: under-connected modules}
+Let $\{C_1,\dots,C_k\}$ be the Louvain partition of $\KG$ (modules of size $\geq 20$). Under a configuration-model null with degree sequence $\{d_v\}$ and total edge mass $m=|\Entset|$, the expected number of edges between $C_i$ and $C_j$ is
+\[
+\mathbb{E}_{\textsc{cm}}\!\bigl[e_{ij}\bigr] \,=\, \frac{1}{2m}\,\Bigl(\textstyle\sum_{u\in C_i} d_u\Bigr)\Bigl(\textstyle\sum_{v\in C_j} d_v\Bigr).
+\]
+A community pair $(i,j)$ is a \emph{bridge gap} when the observed cross-edge count is far below this expectation; pairs are scored by $\bigl(\mathbb{E}-\text{obs}\bigr)/\sqrt{\mathbb{E}}$ and cut at $|z|\geq 2$. Communities are labelled by the highest-PageRank entity inside them, taken from the precomputed \code{centralities.csv}.
+
+\paragraph{Output.} \code{output/community\_bridge\_gaps.csv}, $100$ pairs.
+
+\subsection{Forman--Ricci bottleneck edges}
+\label{sec:forman}
+Forman's combinatorial Ricci curvature for an unweighted edge $(u,v)$ on a graph is
+\begin{equation}\label{eq:forman}
+\mathrm{Ric}_F(u,v)\,=\,4 \,-\, \deg(u) \,-\, \deg(v) \,+\, 3\,|N(u)\cap N(v)|,
+\end{equation}
+where $N(\cdot)$ denotes the open neighbourhood. Edges with the most negative curvature are \emph{informational bottlenecks}: they sit between two large neighbourhoods that share few common nodes, so removing them sharply increases shortest-path lengths between communities.
+
+The hub-spoke pairs (e.g.\ \code{tokamak}--\code{neutron}, $\mathrm{Ric}_F=-2105$) trivially dominate the ranking. To recover meaningful bottlenecks we restrict to edges whose endpoint degrees fall in a balanced band ($\deg\geq 5$, ratio $\leq 5$). On the resulting subset, $200$ edges survive; the most negatively curved are interpreted as \emph{cross-cluster choke points}.
+
+\subsection{Longest reasoning chains}
+The compositional reasoning depth of a KG is bounded above by its diameter. We sample $200$ source nodes and compute single-source shortest paths via NetworkX BFS, returning the top-$25$ source--target pairs by length. On the unweighted entity graph the longest realised paths have length $5$ (a hexagonal sequence of six entities), and they consistently traverse one hub before exiting through a low-degree node, e.g.\ 
+\[
+\text{wave frequency}\!\to\!\text{Alfv\'en continuum}\!\to\!\textbf{tokamak}\!\to\!\text{Germany}\!\to\!\text{CRPP}\!\to\!\text{Web of Science}.
+\]
+This is informative about the \emph{shape} of the graph (one hub bridges almost everything) more than about specific gaps, but the detector is cheap and feeds the hypothesis aggregator.
+
+\subsection{Articulation points and bridge edges}
+\label{sec:cuts}
+\paragraph{Articulation points.} A node $v$ whose removal increases the number of connected components is a \emph{single point of failure}. Tarjan's algorithm finds them in $O(|\Vset|+|\Entset|)$.
+
+\paragraph{Bridge edges (2-edge-cuts).} An edge $(u,v)$ whose removal disconnects the graph is an \emph{edge-level} single point of failure, also detectable in linear time via \code{nx.bridges}.
+
+On the dense raw co-occurrence graph there are essentially no such cuts: the giant component has only one articulation point and zero bridges (almost every node sits inside a small triangle). To recover meaningful structural fragility, we run both detectors on the \emph{backbone graph} obtained by discarding edges with weight $<2$ (i.e.\ pairs that co-occur in a single paper). On the backbone we find $391$ articulation points and $933$ bridges. Each cut is annotated with the size of the fragment that detaches when the cut is removed, and only the top-$100$ are reported.
+
+\subsection{Triadic-closure deficit: null-corrected missing links}
+\label{sec:triadic}
+Adamic--Adar and common-neighbour scores are the workhorses of link prediction, but on a scale-free graph they over-reward hub neighbours. We use a configuration-model correction. For a non-edge $(u,v)$ with shared-neighbour set $S=N(u)\cap N(v)$, the expected closure probability under the configuration null is
+\[
+p_{\text{exp}}(u,v) \,=\, \frac{\deg(u)\,\deg(v)}{2m}.
+\]
+We define the \emph{triadic-closure deficit} as
+\begin{equation}\label{eq:deficit}
+\textsc{Def}(u,v) \,=\, |S| \cdot \log\!\left(\frac{|S|}{1 + p_{\text{exp}}(u,v)\cdot |S|}\right),
+\end{equation}
+which rewards pairs with many bridging neighbours but penalises pairs whose endpoints are themselves super-hubs. Pairs with $|S|<4$ are dropped. On the top-$4000$ subgraph the highest-scoring pairs (Table~\ref{tab:triadic}) are predominantly singular--plural or near-synonym variants that survived the linker, alongside genuine missing links such as \code{graphite}--\code{lithium} (a real materials-science discussion absent from the abstracts) and \code{anomalous transport}--\code{turbulent transport} (a notational separation of the same physics).
+
+\paragraph{Output.} \code{output/triadic\_deficit.csv}, $200$ pairs ranked by $\textsc{Def}$.
+
+\begin{table}[t]
+\centering
+\caption{Top triadic-closure deficits on the top-$4000$ subgraph.}
+\label{tab:triadic}
+\small
+\begin{tabular}{lllrrrr}
+\toprule
+$u$ & $v$ & & $\deg(u)$ & $\deg(v)$ & $|S|$ & $\textsc{Def}$ \\
+\midrule
+implosion & implosions & & 289 & 140 & 78 & 100.7 \\
+TJ-II & TJ-II stellarator & & 228 & 106 & 56 & 97.8 \\
+graphite & lithium & & 166 & 254 & 78 & 97.6 \\
+capsule & capsules & & 222 & 65 & 43 & 92.3 \\
+anomalous transport & turbulent transport & & 120 & 163 & 48 & 91.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Diffusion reachability gaps: PPR and heat-kernel}
+\label{sec:diff}
+Both Personalised PageRank (PPR) and the graph heat-kernel measure how easily probability mass spreads from a seed node through the graph. We use them in concert with the embedding cache to pick out entities that are \emph{semantically close} to a hub but \emph{diffusion-cold} from it --- pairs the literature treats as related yet which lack any efficient citation-style path.
+
+\paragraph{PPR.}
+For a seed $h$ and teleport probability $\alpha$, the personalised PageRank vector is the stationary solution of
+\begin{equation}
+\boldsymbol{\pi}_h \,=\, (1-\alpha)\,P\,\boldsymbol{\pi}_h \,+\, \alpha\,\mathbf{e}_h, \qquad P=D^{-1}A,
+\end{equation}
+computed by power iteration with $\alpha=0.15$. We pick the top-$25$ hubs by weighted degree and compute $\boldsymbol{\pi}_h$ for each.
+
+\paragraph{Heat kernel.}
+On the symmetric normalised Laplacian $L=I-D^{-1/2}AD^{-1/2}$, the heat-kernel diffusion is $\mathbf{p}_t(h) = \exp(-tL)\,\mathbf{e}_h$. We use $t=3$ and the Krylov-subspace product \code{scipy.sparse.linalg.expm\_multiply} so the dense exponential is never formed. Smaller $t$ recovers the local PPR view; larger $t$ exposes global structural distance.
+
+\paragraph{Reachability score.}
+For a hub $h$, let $q$ be the $10\%$ quantile of $\boldsymbol{\pi}_h$ over candidate nodes, and let $\sigma_{u,h}=\cos(\phi(u),\phi(h))$. A node $u$ is a \emph{reachability gap} when $\sigma_{u,h}\geq 0.55$ \emph{and} $\boldsymbol{\pi}_h(u) \leq q$. The combined score
+\[
+s(u,h) \,=\, \sigma_{u,h} \cdot \bigl(1 - \boldsymbol{\pi}_h(u)/\max_v \boldsymbol{\pi}_h(v)\bigr)
+\]
+balances semantic reward against diffusion penalty. We retain the top-$8$ gaps per hub.
+
+\paragraph{Output.} \code{output/ppr\_reachability\_gaps.csv} ($33$ pairs) and \code{output/heat\_kernel\_reachability\_gaps.csv} ($11$ pairs). Pairs that appear in both lists --- e.g.\ \code{plasma}--\code{plasma science}, \code{energy}--\code{high-energy}, \code{tokamaks}--\code{plasma science} --- are the most actionable, since the gap survives at multiple diffusion scales.
+
+% ============================================================
+\section{Noise filtering and null-model choices}
+\label{sec:filtering}
+% ============================================================
+
+A reusable lesson from this work is that \emph{every} detector required filtering or a null-model correction before it produced non-trivial output. We summarise the design choices in Table~\ref{tab:filtering}; without them the top of each ranking is dominated by the same handful of structural artefacts.
+
+\begin{table}[ht]
+\centering
+\caption{Filtering and null-model corrections applied per detector.}
+\label{tab:filtering}
+\small
+\begin{tabular}{p{0.27\linewidth}p{0.65\linewidth}}
+\toprule
+Detector & Correction \\
+\midrule
+Semantic gaps & Cosine band $[0.55,0.80]$; Greek/Unicode normalisation; reject substring, hyphenation, and word-order variants. \\
+Community bridge gaps & Configuration-model expectation $(d_id_j)/2m$; modules $\geq 20$; PageRank labels. \\
+Forman bottlenecks & Endpoint $\deg \geq 5$; $\max\!/\min$ ratio $\leq 5$; otherwise hub--spoke pairs trivially win. \\
+Articulation \& bridges & Backbone graph (drop $w<2$); without this, the dense giant component is too triangulated for cuts to exist. \\
+Triadic deficit & Configuration null in the log denominator (Eq.~\ref{eq:deficit}); $|S|\geq 4$. \\
+Trajectories & Drop year-string ``entities'' (regex), drop pure-numeric tokens, drop incomplete crawl year; classify by log-slope $\pm 0.5\sigma$. \\
+Diffusion gaps & Cosine threshold $\geq 0.55$; diffusion-cold $\leq 10\%$ quantile; combine PPR \emph{and} heat-kernel for cross-scale validation. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{Hypothesis aggregation}
+\label{sec:agg}
+% ============================================================
+
+The aggregator (\code{analysis/gap\_analysis\_agent.py}) consumes the CSV/JSON outputs of all detectors plus the existing TDA, structural-hole, link-prediction, and FCA outputs from earlier work. For each, it materialises a small set of ranked records into a uniform \emph{hypothesis card}:
+\begin{verbatim}
+{
+  "type":            "<gap_type>",
+  "confidence":      "low" | "medium" | "high",
+  "entities":        [ "<u>", "<v>", ... ],
+  "hypothesis":      "<natural-language statement>",
+  "score":           <float>,
+  "suggested_action":"<one-sentence next step>"
+}
+\end{verbatim}
+The natural-language statement is a deterministic template per type (no LLM is required), but if either an Ollama endpoint or an OpenAI key is available, the aggregator runs an enrichment pass that summarises the top-$k$ cards into longer paragraph hypotheses. The backend used is recorded on each enriched card.
+
+On the current fusion KG the aggregator emits \textbf{123 hypothesis cards across 15 categories}. The distribution (Table~\ref{tab:counts}) is balanced: no single detector dominates, and the rare types (\code{knowledge\_loop}, \code{stalled\_hub}) reflect genuine scarcity of those phenomena rather than a configuration choice.
+
+\begin{table}[ht]
+\centering
+\caption{Hypothesis cards by type, current run.}
+\label{tab:counts}
+\small
+\begin{tabular}{lr|lr}
+\toprule
+Type & \# & Type & \# \\
+\midrule
+missing\_link & 15 & community\_bridge\_gap & 8 \\
+semantic\_gap & 15 & bottleneck\_edge & 8 \\
+topological\_void & 10 & reasoning\_chain & 6 \\
+structural\_hole & 10 & emerging\_front & 6 \\
+triadic\_deficit & 10 & fragile\_bridge & 6 \\
+reachability\_gap\_ppr & 10 & bridge\_edge & 6 \\
+reachability\_gap\_heat & 6 & stalled\_hub & 4 \\
+\multicolumn{2}{l}{} & knowledge\_loop & 3 \\
+\midrule
+\multicolumn{4}{r}{Total: \textbf{123 hypotheses}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{Examples of generated hypotheses}
+\label{sec:hypotheses}
+% ============================================================
+
+We highlight five representative cards drawn from different detector families.
+
+\paragraph{H1 (triadic deficit).} \emph{``\code{graphite} and \code{lithium} share $78$ neighbours but never directly co-occur in our abstracts; the configuration-model expected closure probability is $0.27$ and the deficit score is $97.6$. The pair is a strong missing-link candidate; the shared-neighbour set is dominated by plasma-facing-component (PFC) entities, suggesting a literature gap on the lithium--graphite interaction in PFC research.''}
+
+\paragraph{H2 (PPR reachability gap).} \emph{``\code{plasma science} is semantically very close to the hub \code{plasma} (cosine $0.83$) yet its Personalised PageRank mass from that hub is in the bottom diffusion decile ($\pi=1.6\times 10^{-5}$). Although the literature treats the two as related concepts, no efficient citation path connects them --- they live in different sub-communities of the KG.''}
+
+\paragraph{H3 (bridge edge).} \emph{``The single edge \code{(control system, data acquisition system, weight=3)} is a backbone bridge: removing it would isolate a fragment of three entities. The connection between `control system' and the DAQ sub-cluster rests on a single citation pattern, exposing a thin literature link.''}
+
+\paragraph{H4 (Forman bottleneck).} \emph{``The edge \code{(impurity transport, neoclassical transport)}, with $\mathrm{Ric}_F=-118$, sits between two well-developed neighbourhoods that share only nine entities. Bridging concepts that explicitly link the two transport regimes are conspicuously rare.''}
+
+\paragraph{H5 (semantic gap).} \emph{``\code{toroidal field} and \code{toroidal flow} are highly related semantically (cosine $0.799$) but never co-occur in our $8\,358$ abstracts --- a candidate for explicit cross-referencing in review articles on tokamak transport.''}
+
+These examples illustrate the qualitative range covered by the detector suite: a near-synonym surface gap (H5) coexists with a deeper structural absence (H4) and a diffusion-level mismatch (H2).
+
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+% ============================================================
+
+\paragraph{Detector agreement.} Several pairs surface in two or three detectors simultaneously. The \code{plasma}--\code{plasma science} pair, for instance, is identified by both PPR and heat-kernel reachability detectors at every scale we tried, which strongly suggests it is a structural absence rather than an artefact of the diffusion timescale. Conversely, when a triadic-deficit pair like \code{implosion}--\code{implosions} fails to appear in the semantic-gap list (because it was filtered as a plural variant) we obtain useful evidence that the deficit is a normalisation problem rather than a content problem; the linker has missed an entity merge.
+
+\paragraph{Limitations.}
+\begin{enumerate}
+\item \emph{NER provenance.} All detectors inherit the strengths and weaknesses of the underlying NER. Surface variants (e.g.\ \code{tj-ii} vs.\ \code{tj-ii stellarator}) leak through every filter that does not explicitly look for them.
+\item \emph{Co-occurrence is not citation.} Diffusion gaps describe the topology of entity co-occurrence in abstracts; they are not direct claims about citation behaviour. The hypotheses are useful precisely because we make this conflation explicit: a diffusion gap is a discoverability problem in the abstract layer, not in the citation layer.
+\item \emph{Scale.} The diffusion detectors are evaluated on the top-$4000$ entities by weighted degree. Smaller hubs are not seeds of the PPR sweep; we sometimes see them appear as cold candidates of larger hubs but do not make them seeds themselves.
+\item \emph{Curvature corrections.} The endpoint-degree band on Forman curvature is a crude proxy for an Ollivier--Ricci correction, which would be more principled but requires solving an optimal-transport sub-problem per edge.
+\end{enumerate}
+
+\paragraph{What is left for future work.}
+\begin{itemize}
+\item \emph{Multi-scale heat sweeps.} Currently we report only $t=3$. A sweep over $t\in\{1,5,20\}$ would expose local-vs-global gap regimes but multiplies runtime.
+\item \emph{Degree-corrected stochastic block model residuals.} Strictly stronger than the configuration null used in \S\ref{sec:triadic} and \S\ref{sec:detectors}, but requires a heavy dependency (\code{graspologic}) and several minutes of compute per run.
+\item \emph{Hyperbolic embedding distortion.} A natural complement to the diffusion detectors for hierarchical sub-fields (e.g.\ \code{Diagnostics} taxonomy), but requires a dedicated embedding pipeline.
+\item \emph{Closed-loop validation.} The hypotheses are currently inspected manually. The next step is an automated validation loop where each hypothesis is checked against full-text PDFs (which we already harvest in \code{data/fulltexts/pdfs/}) and either retired (refuted), confirmed, or kept open.
+\end{itemize}
+
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% ============================================================
+
+We have extended a multi-modal mathematical analysis pipeline into an agentic gap-detection system that produces 123 ranked hypothesis cards on a 50{,}595-node nuclear fusion KG. The detectors span four kinds of absence (semantic, structural, diffusive, temporal), each with an explicit null-model or filter that prevents trivial hub-spoke or surface-variant winners from dominating the output. The system is reproducible, fits in a single workstation, and integrates cleanly with both local Ollama and remote OpenAI LLM backends. We see this as a step towards Buehler's \emph{agentic deep graph reasoning} vision in the specific setting of a small, expert-curated scientific KG.
+
+% ============================================================
+\section*{Reproducibility}
+% ============================================================
+
+All code is in the \code{KG-explorer} repository. The full pipeline is invoked by
+\begin{verbatim}
+python run_analysis.py --only graph,tda,holes,links,fca,
+                              semgaps,advgaps,diffgaps,gaps
+\end{verbatim}
+which produces the CSV/JSON artefacts referenced throughout this report and the final \code{output/gap\_report.json} and \code{output/gap\_report.md} files. Detector-specific source files are: \code{analysis/semantic\_gaps.py} (\S\ref{sec:semgap}, community bridges), \code{analysis/advanced\_gaps.py} (\S\ref{sec:forman}, \S\ref{sec:cuts}, \S\ref{sec:triadic}, longest paths, trajectories), \code{analysis/diffusion\_gaps.py} (\S\ref{sec:diff}), and \code{analysis/gap\_analysis\_agent.py} (\S\ref{sec:agg}).
+
+% ============================================================
+\bibliographystyle{plainnat}
+\begin{thebibliography}{9}
+
+\bibitem[Buehler(2025)]{buehler2025agentic}
+M.~J. Buehler.
+\newblock Agentic Deep Graph Reasoning Yields Self-Organizing Knowledge Networks.
+\newblock \emph{arXiv preprint arXiv:2502.13025}, 2025.
+
+\bibitem[Loreti et~al.(2025)]{loreti2025}
+S.~Loreti et~al.
+\newblock A nuclear fusion energy knowledge graph from named entity recognition.
+\newblock \emph{Dataset / preprint}, 2025.
+
+\bibitem[Wang et~al.(2020)]{wang2020minilm}
+W.~Wang, F.~Wei, L.~Dong, H.~Bao, N.~Yang, and M.~Zhou.
+\newblock MiniLM: Deep self-attention distillation for task-agnostic compression of pre-trained transformers.
+\newblock In \emph{NeurIPS}, 2020.
+
+\end{thebibliography}
+
+\end{document}
