@@ -177,9 +177,10 @@
       "category": "missing_expected",
       "question": "What is the operational schedule of SPARC for 2027?",
       "expect": {
-        "missing_from_graph": true
+        "missing_from_graph": false,
+        "should_mention": ["sparc", "2027"]
       },
-      "rationale": "Future schedule + recent device; tests gap-report pipeline."
+      "rationale": "Future schedule; graph has SPARC context but not 2027 plan. Agent should answer from available papers while acknowledging the gap."
     }
   ]
 }
