@@ -89,8 +89,8 @@ LIMIT $max_sentences
 
 # Write a single typed relation edge
 _QUERY_WRITE = """
-MATCH (a:Entity {name: $subj})
-MATCH (b:Entity {name: $obj})
+MATCH (a:Entity {{name: $subj}})
+MATCH (b:Entity {{name: $obj}})
 MERGE (a)-[r:{rel_type}]->(b)
 ON CREATE SET r.source = 'typed_ie', r.confidence = $confidence
 """
