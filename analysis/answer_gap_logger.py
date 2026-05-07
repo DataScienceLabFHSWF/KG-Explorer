@@ -38,6 +38,7 @@ def log_answer_event(
     n_abstracts: int,
     cypher: str = "",
     sentinel: bool = False,
+    coverage_score: float | None = None,
 ) -> None:
     """Append one event line to the answer-gap log.
 
@@ -55,6 +56,8 @@ def log_answer_event(
         Generated Cypher (truncated for storage).
     sentinel
         ``True`` if the LLM emitted the missing-data sentinel.
+    coverage_score
+        Self-graded 0–1 coverage score emitted by the QA LLM (optional).
     """
     LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     record = {
@@ -66,6 +69,7 @@ def log_answer_event(
         "cypher": (cypher or "")[:300],
         "sentinel": bool(sentinel),
         "no_evidence": (n_rows == 0 and n_abstracts == 0),
+        "coverage_score": coverage_score,
     }
     with LOG_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")

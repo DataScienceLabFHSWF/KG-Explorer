@@ -201,6 +201,11 @@ Writing rules
   used to log knowledge gaps; never include it when the answer is complete.
 - Structure longer answers with short bullet points. Answer in the same
   language as the question.
+- After your answer, on a NEW LINE, emit exactly:
+  COVERAGE: <score>
+  where <score> is a single decimal between 0.0 (no relevant evidence) and
+  1.0 (fully grounded in the provided evidence). This score is used by the
+  gap detection system; always include it.
 
 Evidence
 --------
@@ -378,13 +383,28 @@ class FusionCypherAgent:
             except Exception as exc2:
                 logger.warning("Final answer synthesis failed: %s", exc2)
 
-        # Step 7: detect missing-data sentinel and log to the answer-gap store.
+        # Step 7: parse the COVERAGE score emitted by the QA LLM, strip it
+        # from the user-visible answer, and carry it forward for gap logging.
+        coverage_score: float | None = None
+        if answer:
+            cov_match = re.search(r'\bCOVERAGE:\s*([01](?:\.\d+)?)', answer, re.IGNORECASE)
+            if cov_match:
+                try:
+                    coverage_score = float(cov_match.group(1))
+                except ValueError:
+                    pass
+                # Remove the "COVERAGE: x.x" line from the visible answer
+                answer = re.sub(r'\nCOVERAGE:\s*[01](?:\.\d+)?\s*$', '', answer,
+                                flags=re.IGNORECASE).strip()
+
+        # Step 8: detect missing-data sentinel and log to the answer-gap store.
         missing_from_graph = MISSING_DATA_SENTINEL in (answer or "")
         if missing_from_graph:
             answer = answer.replace(MISSING_DATA_SENTINEL, "").strip()
-        # Heuristic: also log if no abstracts AND no structured rows reached us.
+        # Also log if: no evidence at all, OR coverage score below threshold.
         no_evidence = (not abstract_hits) and (not context)
-        if missing_from_graph or no_evidence:
+        low_coverage = coverage_score is not None and coverage_score < 0.35
+        if missing_from_graph or no_evidence or low_coverage:
             try:
                 log_answer_event(
                     question=question,
@@ -393,6 +413,7 @@ class FusionCypherAgent:
                     n_abstracts=len(abstract_hits),
                     cypher=cypher,
                     sentinel=missing_from_graph,
+                    coverage_score=coverage_score,
                 )
             except Exception as exc3:
                 logger.warning("Could not log answer-gap event: %s", exc3)
@@ -405,6 +426,7 @@ class FusionCypherAgent:
             "linked_entities": linked,
             "fallback_used": fallback_used,
             "missing_from_graph": missing_from_graph,
+            "coverage_score": coverage_score,
             "error": error,
         }
 
@@ -516,6 +538,14 @@ class FusionCypherAgent:
         except Exception as exc:
             logger.warning("Fulltext retrieval failed: %s", exc)
 
+        # 3) Sentence-level re-ranking: for numeric / "how much" / "why"
+        # questions, replace the raw truncated abstract with the 2–3 sentences
+        # most similar to the question. This ensures quantitative facts
+        # (e.g. "80 % of the energy is carried by the neutron") surface even
+        # when they appear deep in the abstract.
+        if out and self._linker:
+            out = _rerank_to_sentences(question, out, self._linker, top_sentences=3)
+
         return out
 
     # ── Fallback ─────────────────────────────────────────────────────────
@@ -548,6 +578,63 @@ class FusionCypherAgent:
 
 # ── Helpers ───────────────────────────────────────────────────────────────
 
+
+# Keyword → exact Category.name mapping. Used to inject a category hint into
+# the Cypher prompt so the LLM uses pattern #5 (category enumeration) instead
+# of the less precise pattern #1 (substring match) for "most/top X" questions.
+_CATEGORY_HINTS: list[tuple[list[str], str]] = [
+    (["fusion device", "fusion devices", "device type", "reactor type",
+      "type of reactor", "type of device"],
+     "Nuclear Fusion Device Type"),
+    (["experimental facility", "experimental facilities", "fusion facility",
+      "fusion facilities", "research facility", "test facility"],
+     "Nuclear Fusion Experimental Facility"),
+    (["plasma property", "plasma properties", "plasma characteristic"],
+     "Plasma property"),
+    (["fusion technique", "confinement technique", "fusion method",
+      "heating method", "heating technique"],
+     "Nuclear Fusion Technique"),
+    (["system component", "fusion component", "reactor component",
+      "wall material", "plasma-facing", "first wall"],
+     "Nuclear Fusion System Component"),
+    (["diagnostic", "diagnostics", "monitoring", "detector", "detection system"],
+     "Detection and Monitoring Systems"),
+    (["field configuration", "magnetic configuration", "coil geometry"],
+     "Field Configuration"),
+    (["control system", "feedback system"],
+     "Control Systems"),
+    (["simulation code", "simulation software", "transport code",
+      "mhd code", "modelling code"],
+     "Software and simulation"),
+    (["chemical element", "chemical compound", "fuel material", "isotope"],
+     "Chemical Element or Compound"),
+    (["plasma event", "plasma disruption", "instability event"],
+     "Plasma event"),
+    (["physical process", "physical phenomenon"],
+     "Physical Process"),
+    (["particle", "ion species", "neutral particle"],
+     "Particle"),
+]
+
+# Words that signal a ranking/enumeration question — trigger category lookup.
+_RANKING_WORDS_RE = re.compile(
+    r"\b(most|top|common|frequent|often|appear|cited|popular|leading|list)\b",
+    re.IGNORECASE,
+)
+
+
+def _detect_category_hint(question: str) -> str | None:
+    """Return an exact Category.name if the question is a ranking question
+    about a recognisable concept category, else None."""
+    if not _RANKING_WORDS_RE.search(question):
+        return None
+    q_lower = question.lower()
+    for keywords, cat_name in _CATEGORY_HINTS:
+        if any(kw in q_lower for kw in keywords):
+            return cat_name
+    return None
+
+
 def _build_augmented_question(
     question: str,
     linked: list[tuple[str, float]],
@@ -558,6 +645,7 @@ def _build_augmented_question(
 
     Injects:
     - Verified entity names from semantic linking (highest-confidence first)
+    - Category hint for ranking/enumeration questions (triggers pattern #5)
     - Recent conversation turns for follow-up coreference resolution
     """
     parts: list[str] = []
@@ -569,6 +657,14 @@ def _build_augmented_question(
         parts.append(
             f"[Verified entity names in this knowledge graph: {names_str}]\n"
             f"[Use these exact values in your CONTAINS clauses.]\n"
+        )
+
+    # Category hint for "most/top/common X" questions
+    cat_hint = _detect_category_hint(question)
+    if cat_hint:
+        parts.append(
+            f'[RANKING QUESTION DETECTED — use Cypher pattern #5 with '
+            f'c.name = "{cat_hint}". Do NOT use pattern #1.]\n'
         )
 
     # Conversation history
@@ -629,4 +725,49 @@ def _format_evidence(rows: list[dict], abstracts: list[dict]) -> str:
     if not parts:
         return "(no evidence retrieved)"
     return "\n".join(parts)
+
+
+# Sentence boundary splitter — handles abbreviations like "e.g.", "Fig.", etc.
+_SENT_END = re.compile(r'(?<![A-Z][a-z])(?<!e\.g)(?<!i\.e)(?<!et al)(?<!\d)\.\s+')
+
+
+def _rerank_to_sentences(
+    question: str,
+    docs: list[dict],
+    linker,  # EntityLinker — we borrow its SentenceTransformer
+    top_sentences: int = 3,
+    min_sent_len: int = 40,
+) -> list[dict]:
+    """Replace each doc's ``excerpt`` with the top-N most question-relevant
+    sentences from that abstract. Improves numeric / quantitative retrieval.
+
+    Falls back gracefully to the original excerpt on any error.
+    """
+    try:
+        import numpy as np
+        model = linker._model
+        q_vec = model.encode([question], normalize_embeddings=True)
+
+        out: list[dict] = []
+        for doc in docs:
+            raw = (doc.get("excerpt") or "").strip()
+            if not raw:
+                out.append(doc)
+                continue
+            # Split into sentences; filter very short ones (headers, etc.)
+            sents = [s.strip() for s in _SENT_END.split(raw) if len(s.strip()) >= min_sent_len]
+            if len(sents) < 2:
+                out.append(doc)
+                continue
+            s_vecs = model.encode(sents, normalize_embeddings=True, show_progress_bar=False)
+            scores = (s_vecs @ q_vec.T).squeeze()
+            top_idx = np.argsort(scores)[::-1][:top_sentences]
+            # Preserve reading order within the abstract
+            ordered = sorted(top_idx, key=lambda i: i)
+            best = " [...] ".join(sents[i] for i in ordered)
+            out.append({**doc, "excerpt": best, "source": doc.get("source", "") + "+sent"})
+        return out
+    except Exception as exc:
+        logger.debug("Sentence reranking skipped: %s", exc)
+        return docs
 

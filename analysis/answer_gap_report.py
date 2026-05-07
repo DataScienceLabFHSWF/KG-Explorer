@@ -48,11 +48,39 @@ def _load_events() -> list[dict]:
     return events
 
 
+def _cluster_by_entities(events: list[dict]) -> list[dict]:
+    """Group failed questions by their linked-entity signature.
+
+    Returns a list of clusters sorted by size (largest first). Each cluster is
+    actionable: one ingestion / IE job fixes all questions in it.
+    """
+    # Key = frozenset of linked entities (empty set = unlinked)
+    buckets: dict[frozenset, list[dict]] = defaultdict(list)
+    for ev in events:
+        key = frozenset(ev.get("linked_entities") or [])
+        buckets[key].append(ev)
+
+    clusters = []
+    for ents, evs in sorted(buckets.items(), key=lambda x: -len(x[1])):
+        avg_cov = None
+        scores = [e["coverage_score"] for e in evs if e.get("coverage_score") is not None]
+        if scores:
+            avg_cov = round(sum(scores) / len(scores), 2)
+        clusters.append({
+            "entities": sorted(ents),
+            "count": len(evs),
+            "avg_coverage_score": avg_cov,
+            "questions": [e.get("question", "") for e in evs],
+        })
+    return clusters
+
+
 def build_report(events: list[dict]) -> dict:
     """Aggregate raw events into a structured report."""
     by_mode: dict[str, list[dict]] = {
         "no_evidence": [],
         "sentinel_only": [],
+        "low_coverage": [],
         "unlinked": [],
     }
     entity_freq: Counter[str] = Counter()
@@ -69,11 +97,14 @@ def build_report(events: list[dict]) -> dict:
             by_mode["no_evidence"].append(ev)
         elif ev.get("sentinel"):
             by_mode["sentinel_only"].append(ev)
+        elif (ev.get("coverage_score") is not None and ev["coverage_score"] < 0.35):
+            by_mode["low_coverage"].append(ev)
 
     return {
         "total_failed_questions": len(events),
         "by_failure_mode": {k: len(v) for k, v in by_mode.items()},
         "top_entities_in_failures": entity_freq.most_common(20),
+        "question_clusters": _cluster_by_entities(events),
         "examples": {k: v[:5] for k, v in by_mode.items()},
         "unlinked_question_samples": unlinked_questions[:20],
     }
@@ -108,6 +139,21 @@ def render_markdown(report: dict) -> str:
         lines.append("|---|---|")
         for name, n in report["top_entities_in_failures"]:
             lines.append(f"| `{name}` | {n} |")
+        lines.append("")
+
+    clusters = report.get("question_clusters") or []
+    if clusters:
+        lines.append("## Question clusters (actionable ingestion targets)")
+        lines.append("")
+        lines.append("Each row is one ingestion / typed-relation job.")
+        lines.append("")
+        lines.append("| # | Entities | Questions | Avg coverage |")
+        lines.append("|---|---|---|---|")
+        for i, cl in enumerate(clusters[:15], 1):
+            ents = ", ".join(f"`{e}`" for e in cl["entities"]) or "*(unlinked)*"
+            qs = "; ".join(f"*{q}*" for q in cl["questions"][:2])
+            cov = f"{cl['avg_coverage_score']:.2f}" if cl["avg_coverage_score"] is not None else "—"
+            lines.append(f"| {i} | {ents} | {qs} | {cov} |")
         lines.append("")
 
     if report["unlinked_question_samples"]:

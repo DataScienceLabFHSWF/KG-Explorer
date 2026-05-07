@@ -204,6 +204,22 @@ def aggregate_gaps():
         top_pr = cent.nlargest(5, "pagerank")[["entity", "pagerank"]].to_dict("records")
         gaps["summary_stats"]["top_pagerank"] = top_pr
 
+    # Answer-gap report (questions the chat agent could not answer).
+    # This is the *behavioural* gap signal, complementing all the
+    # structural ones above. Produced by analysis/answer_gap_report.py from
+    # the live JSONL log written by the chat path.
+    ag = _load_json(OUTPUT_DIR / "answer_gap_report.json")
+    if ag:
+        gaps["answer_gaps"] = ag
+        gaps["summary_stats"]["answer_gap_questions"] = ag.get("total_failed_questions", 0)
+        gaps["summary_stats"]["answer_gap_top_entities"] = ag.get("top_entities_in_failures", [])[:10]
+        n_top = len(ag.get("top_entities_in_failures", []))
+        n_unlinked = len(ag.get("unlinked_question_samples", []))
+        print(f"  Loaded answer-gap report: {ag.get('total_failed_questions', 0)} failed questions, "
+              f"{n_top} repeat-offender entities, {n_unlinked} unlinked-question samples")
+    else:
+        gaps["answer_gaps"] = None
+
     return gaps
 
 
@@ -213,6 +229,52 @@ def aggregate_gaps():
 def generate_hypotheses(gaps):
     """Generate structured research hypotheses from gap data."""
     hypotheses = []
+
+    # From answer-gap (behavioural) report. These are the strongest signal
+    # because they come from real user questions the system could not
+    # answer. Each repeat-offender entity becomes a candidate for typed-
+    # relation enrichment or focused PDF ingestion.
+    ag = gaps.get("answer_gaps")
+    if ag:
+        top_ents = ag.get("top_entities_in_failures") or []
+        for name, n in top_ents[:10]:
+            hypotheses.append({
+                "type": "answer_gap_entity",
+                "confidence": "high" if n >= 3 else "medium",
+                "entities": [name],
+                "hypothesis": (
+                    f"The entity '{name}' is repeatedly linked by the chat agent "
+                    f"({n} failed questions) but the surrounding KG context is "
+                    f"insufficient to ground an answer. Likely missing typed "
+                    f"relations (e.g. USES_FUEL, HAS_TEMPERATURE, IS_TYPE_OF) "
+                    f"or insufficient abstract coverage."
+                ),
+                "suggested_action": (
+                    f"(1) Run a focused IE pass on the top papers mentioning '{name}'. "
+                    f"(2) Ingest 5\u201310 highly-cited recent reviews via daq/. "
+                    f"(3) Add typed Reaction / Quantity / ConfinementClass relations."
+                ),
+                "source": "answer_gap_report",
+                "failed_questions": n,
+            })
+
+        # Unlinked question samples = concepts MISSING from the KG entirely.
+        for q in (ag.get("unlinked_question_samples") or [])[:5]:
+            hypotheses.append({
+                "type": "answer_gap_unlinked",
+                "confidence": "high",
+                "entities": [],
+                "hypothesis": (
+                    f"User question '{q}' could not be linked to any entity in the KG. "
+                    f"This indicates a concept the NER pipeline did not extract or that "
+                    f"is genuinely absent from the corpus."
+                ),
+                "suggested_action": (
+                    "Add the missing concept(s) to the NER schema or ingest papers "
+                    "covering this topic."
+                ),
+                "source": "answer_gap_report",
+            })
 
     # From topological voids (highest value gaps)
     for void in gaps["topological"]["voids"][:10]:

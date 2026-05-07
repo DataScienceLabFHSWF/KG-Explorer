@@ -357,3 +357,85 @@ current schema has only `:MENTIONS` and `:CO_OCCURS_WITH`. To answer
 restricted to the highest-frequency entities surfaced by the answer-gap
 report, so the labour cost is bounded by the gap evidence rather than
 applied to all 51 k entities at once.
+
+---
+
+## Status snapshot — May 2026
+
+After the May 2026 rewrite the chat path looks like this:
+
+```
+question
+  ├─ EntityLinker (semantic, junk-filtered)
+  ├─ _fetch_abstract_context  ── GraphRAG  ──┐
+  ├─ GraphCypherQAChain (LLM Cypher) ────────┤
+  ├─ _format_evidence(rows + abstracts) ─────┘
+  ├─ QA_TEMPLATE final synthesis (LLM)
+  └─ if [MISSING_FROM_GRAPH] or zero-evidence
+       → answer_gap_logger.log_answer_event
+       → answer_gap_report (aggregated)
+       → gap_analysis_agent  (new `answer_gap_*` hypotheses)
+```
+
+Behavioural QA test set: [tests/qa_test_questions.json](../tests/qa_test_questions.json)
+(17 items; current pass rate 13/17 ≈ 76 % with `gemma4:e2b`).
+
+Sentinel pipeline verified end-to-end: 3 sentinel events flowed through to
+`output/answer_gap_report.json` and surfaced as 10 `answer_gap_entity`
+hypotheses + N `answer_gap_unlinked` hypotheses inside
+`output/gap_report.{md,json}`.
+
+### Concrete next directions
+
+**D1 — Fix the `Which X appear most often?` Cypher pattern.**
+The runner caught `feedback-02` (devices) failing because the LLM matches
+on `"fusion devices"` substring instead of enumerating the
+`Nuclear Fusion Device Type` category. Add a new Cypher pattern in
+[analysis/llm_graph_qa.py](../analysis/llm_graph_qa.py): when the
+question contains `most/top/common/frequent` AND a category name,
+generate `MATCH (e)-[:IN_CATEGORY]->(c {name:$cat}) ... ORDER BY mentions DESC`.
+
+**D2 — Quantitative facts in abstracts (`feedback-06`).**
+The 80 % neutron / 20 % alpha energy split is a *sentence* in many
+abstracts. Add a sentence-level retriever (split abstracts on `.`,
+embed sentences, run the question against sentence embeddings) instead
+of returning whole-abstract excerpts. This unlocks numeric questions
+without any schema changes.
+
+**D3 — Run the QA test set in CI.**
+[tests/run_qa_tests.py](../tests/run_qa_tests.py) already produces
+`output/qa_test_results.{json,md}`. Wrap it in pytest so a regression
+in the Cypher template (e.g. SQL bleed-through) fails the build.
+
+**D4 — Cluster failed questions before reporting.**
+Today `answer_gap_report` ranks by raw entity frequency. Group
+questions by canonical concept first (e.g. all "cost"-flavoured
+questions → one cluster), then surface clusters. This makes the report
+actionable: each cluster is one PDF-ingestion / NER-extension job.
+
+**D5 — Promote sentinel decisions to a confidence score.**
+Right now the agent emits a binary `[MISSING_FROM_GRAPH]` marker.
+Have the QA prompt emit a self-graded coverage score (0–1) per answer
+and log it. Then the gap report can rank by *low-confidence* answers
+in addition to outright sentinel hits.
+
+**D6 — Loop the report back into `daq/`.**
+Add a small driver (`daq/from_gap_report.py`) that reads
+`answer_gap_report.json`, takes the top-K offending entities, queries
+OpenAlex for the most-cited recent papers mentioning them, and feeds
+DOIs into the existing `daq/pipeline.py`. This is the first step that
+makes the system self-improving.
+
+**D7 — Typed-relation extraction prompt for the same model.**
+Once D6 brings new abstracts in, run a second Ollama prompt over each
+abstract that asks specifically for typed triples
+`(device, USES_FUEL, fuel)`, `(reaction, HAS_OPTIMAL_TEMPERATURE, T)`,
+etc. Store those as new edges in Neo4j with provenance back to the
+paper. The chat agent already has Cypher patterns ready for typed
+relations once they exist.
+
+**D8 — Surface the gap report in the Streamlit UI.**
+Add a tab to [chat_app.py](../chat_app.py) that renders
+`answer_gap_report.md` so users (and reviewers) can see in real time
+what the system is failing on. Closes the human-in-the-loop on
+ontology curation.

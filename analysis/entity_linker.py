@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import logging
 import pickle
+import re
 from pathlib import Path
 
 import numpy as np
@@ -35,6 +36,43 @@ logger = logging.getLogger(__name__)
 _CACHE_PATH = OUTPUT_DIR / "entity_linker_cache.pkl"
 _EMBED_MODEL = "all-MiniLM-L6-v2"
 _TOP_N = 12_000   # top entities by total mention count
+
+# Entity-name stoplist. These strings appear in the KG (NER picked them up)
+# but are uninformative for question answering and pollute both the chat
+# context and the answer-gap report. We filter them at vocabulary build time
+# AND at link time (in case of cache reuse).
+_YEAR_RE = re.compile(r"^(19|20)\d{2}$")
+_NUMERIC_RE = re.compile(r"^[\d.,\-+%/\s]+$")
+_GENERIC_STOPWORDS = {
+    # Generic concepts that match any cost/time/year question semantically
+    # but never carry useful KG signal.
+    "cost", "costs", "computational cost", "cost of electricity",
+    "cost of electricity (coe)", "price", "prices",
+    "year", "years", "date", "time", "times", "day", "days",
+    "month", "months", "week", "weeks",
+    "figure", "fig", "table", "section", "appendix",
+    "introduction", "conclusion", "abstract", "reference", "references",
+    "author", "authors", "paper", "papers", "study", "studies",
+    "work", "works", "result", "results", "data", "datum",
+    "value", "values", "number", "numbers",
+    "case", "cases", "example", "examples",
+    "first", "second", "third", "last",
+    "high", "low", "large", "small", "new", "old",
+}
+
+
+def _is_junk_entity(name: str) -> bool:
+    """Return True if ``name`` should be excluded from the linker vocabulary."""
+    n = (name or "").strip().lower()
+    if not n or len(n) < 2:
+        return True
+    if _YEAR_RE.match(n):
+        return True
+    if _NUMERIC_RE.match(n):
+        return True
+    if n in _GENERIC_STOPWORDS:
+        return True
+    return False
 
 
 class EntityLinker:
@@ -106,7 +144,12 @@ class EntityLinker:
             s = float(scores[i])
             if s < min_score:
                 break
-            results.append((self._names[int(i)], round(s, 3)))
+            name = self._names[int(i)]
+            # Defence-in-depth: filter junk at link time too in case the
+            # cached vocabulary predates the stoplist.
+            if _is_junk_entity(name):
+                continue
+            results.append((name, round(s, 3)))
             if len(results) >= top_k:
                 break
         return results
@@ -160,4 +203,11 @@ class EntityLinker:
             LIMIT $top_n
         """
         with driver.session(database=db) as sess:
-            return [r["name"] for r in sess.run(cypher, top_n=self._top_n)]
+            raw = [r["name"] for r in sess.run(cypher, top_n=self._top_n)]
+        kept = [n for n in raw if not _is_junk_entity(n)]
+        if len(kept) < len(raw):
+            logger.info(
+                "EntityLinker: stoplist filtered %d/%d names (years, numbers, generic)",
+                len(raw) - len(kept), len(raw),
+            )
+        return kept

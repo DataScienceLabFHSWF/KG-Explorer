@@ -279,6 +279,80 @@ def _render_assistant_msg(msg: dict):
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
+
+# ── Gap-report tab renderer ────────────────────────────────────────────────
+
+def _render_gap_report_tab():
+    """Render the Answer-Gap Report tab from the live JSONL log."""
+    import pandas as _pd
+    from analysis.answer_gap_logger import LOG_PATH
+    from analysis.answer_gap_report import build_report, _load_events
+
+    st.subheader("Answer-Gap Report")
+    st.caption(
+        "Questions the chat agent could not answer from the knowledge graph. "
+        "Refreshed each time you view this tab."
+    )
+
+    col_refresh, _col_spacer = st.columns([1, 4])
+    with col_refresh:
+        if st.button("Refresh report"):
+            st.rerun()
+
+    events = _load_events()
+    if not events:
+        st.info("No answer-gap events logged yet. Ask the chat agent some questions first.")
+        return
+
+    report = build_report(events)
+
+    total = report["total_failed_questions"]
+    modes = report["by_failure_mode"]
+    cols = st.columns(4)
+    with cols[0]:
+        st.metric("Total gap events", total)
+    with cols[1]:
+        st.metric("Sentinel (missing)", modes.get("sentinel_only", 0))
+    with cols[2]:
+        st.metric("Low coverage", modes.get("low_coverage", 0))
+    with cols[3]:
+        st.metric("Unlinked", modes.get("unlinked", 0))
+
+    st.divider()
+
+    clusters = report.get("question_clusters") or []
+    if clusters:
+        st.markdown("### Question clusters — top ingestion targets")
+        st.caption("Each cluster is one conceptual blind spot.")
+        rows = []
+        for i, cl in enumerate(clusters[:15], 1):
+            ents = ", ".join(cl["entities"]) or "(unlinked)"
+            qs = " | ".join(cl["questions"][:2])
+            cov = f"{cl['avg_coverage_score']:.2f}" if cl["avg_coverage_score"] is not None else "—"
+            rows.append({"#": i, "Entities": ents, "Count": cl["count"],
+                         "Avg coverage": cov, "Questions": qs})
+        st.dataframe(_pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        st.divider()
+
+    top_ents = report.get("top_entities_in_failures") or []
+    if top_ents:
+        st.markdown("### Repeat-offender entities")
+        df = _pd.DataFrame(top_ents, columns=["Entity", "Gap events"])
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.divider()
+
+    unlinked = report.get("unlinked_question_samples") or []
+    if unlinked:
+        st.markdown("### Questions where no entity was linked")
+        for q in unlinked:
+            st.markdown(f"- {q}")
+        st.divider()
+
+    with st.expander(f"Raw gap log ({total} events)", expanded=False):
+        for ev in events[:50]:
+            st.json(ev)
+
+
 # ── Main chat area ─────────────────────────────────────────────────────────
 
 st.header("Fusion Knowledge Graph — LLM Chat")
@@ -288,53 +362,60 @@ st.caption(
 )
 st.divider()
 
-# Display existing conversation
-for msg in st.session_state["messages"]:
-    if msg["role"] == "user":
-        with st.chat_message("user"):
-            st.write(msg["content"])
-    else:
-        with st.chat_message("assistant"):
-            _render_assistant_msg(msg)
+tab_chat, tab_gaps = st.tabs(["Chat", "Answer-Gap Report"])
 
-# ── Input ──────────────────────────────────────────────────────────────────
-
-# Support sidebar example button clicks
-pending = st.session_state.pop("pending_query", None)
-
-user_input = st.chat_input(
-    "Ask anything about fusion research…",
-    key="chat_input",
-)
-
-# Sidebar button overrides direct typing
-query_text = (pending or user_input or "").strip()
-
-if query_text:
-    # Show user message immediately
-    st.session_state["messages"].append({"role": "user", "content": query_text})
-    with st.chat_message("user"):
-        st.write(query_text)
-
-    # Run LLM agent
-    agent, init_error = get_agent()
-
-    with st.chat_message("assistant"):
-        if init_error:
-            st.error(
-                f"**Could not connect to Ollama / Neo4j.**\n\n"
-                f"Error: `{init_error}`\n\n"
-                "Make sure Neo4j and Ollama are running, then reload the page."
-            )
-            msg = {"role": "assistant", "answer": "", "cypher": "", "context": [], "error": init_error}
+with tab_chat:
+    # Display existing conversation
+    for msg in st.session_state["messages"]:
+        if msg["role"] == "user":
+            with st.chat_message("user"):
+                st.write(msg["content"])
         else:
-            with st.spinner("Entity linking → Cypher generation → Graph query → Answer…"):
-                llm_history = _history_for_llm()[:-1]  # exclude the just-added user message
-                result = agent.ask(query_text, history=llm_history)
+            with st.chat_message("assistant"):
+                _render_assistant_msg(msg)
 
-            _render_assistant_msg(result)
-            msg = {"role": "assistant", **result}
+    # ── Input ──────────────────────────────────────────────────────────────────
 
-    st.session_state["messages"].append(msg)
-    st.rerun()
+    # Support sidebar example button clicks
+    pending = st.session_state.pop("pending_query", None)
+
+    user_input = st.chat_input(
+        "Ask anything about fusion research…",
+        key="chat_input",
+    )
+
+    # Sidebar button overrides direct typing
+    query_text = (pending or user_input or "").strip()
+
+    if query_text:
+        # Show user message immediately
+        st.session_state["messages"].append({"role": "user", "content": query_text})
+        with st.chat_message("user"):
+            st.write(query_text)
+
+        # Run LLM agent
+        agent, init_error = get_agent()
+
+        with st.chat_message("assistant"):
+            if init_error:
+                st.error(
+                    f"**Could not connect to Ollama / Neo4j.**\n\n"
+                    f"Error: `{init_error}`\n\n"
+                    "Make sure Neo4j and Ollama are running, then reload the page."
+                )
+                msg = {"role": "assistant", "answer": "", "cypher": "", "context": [], "error": init_error}
+            else:
+                with st.spinner("Entity linking → Cypher generation → Graph query → Answer…"):
+                    llm_history = _history_for_llm()[:-1]  # exclude the just-added user message
+                    result = agent.ask(query_text, history=llm_history)
+
+                _render_assistant_msg(result)
+                msg = {"role": "assistant", **result}
+
+        st.session_state["messages"].append(msg)
+        st.rerun()
+
+
+with tab_gaps:
+    _render_gap_report_tab()
 
