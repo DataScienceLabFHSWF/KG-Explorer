@@ -344,18 +344,33 @@ class FusionCypherAgent:
         # Step 3: build augmented question (entity hints + conversation history)
         augmented = _build_augmented_question(question, linked, history)
 
+        # Step 3b: for ranking/enumeration questions, bypass the LLM Cypher
+        # and use a known-good template directly (the LLM reliably ignores the
+        # category hint and generates a wrong CONTAINS query).
+        cat_hint = _detect_category_hint(question)
+        forced_cypher: str | None = None
+        forced_context: list[dict] | None = None
+        if cat_hint:
+            forced_cypher, forced_context = self._run_ranking_cypher(cat_hint)
+
         # Step 4: run LangChain chain (LLM-generated Cypher)
         cypher, context, answer, error = "", [], "", None
-        try:
-            result = self._chain.invoke({"query": augmented})
-            steps = result.get("intermediate_steps", [])
-            cypher = steps[0].get("query", "").strip() if steps else ""
-            context = steps[1].get("context", []) if len(steps) > 1 else []
-            answer = result.get("result", "").strip()
-            logger.info("Chain ok | cypher=%.80s | rows=%d", cypher, len(context))
-        except Exception as exc:
-            error = str(exc)
-            logger.error("Chain error: %s", exc)
+        if forced_cypher is not None:
+            # Use the pre-computed ranking results; skip the chain
+            cypher = forced_cypher
+            context = forced_context or []
+            logger.info("Ranking bypass: %d rows for category %r", len(context), cat_hint)
+        else:
+            try:
+                result = self._chain.invoke({"query": augmented})
+                steps = result.get("intermediate_steps", [])
+                cypher = steps[0].get("query", "").strip() if steps else ""
+                context = steps[1].get("context", []) if len(steps) > 1 else []
+                answer = result.get("result", "").strip()
+                logger.info("Chain ok | cypher=%.80s | rows=%d", cypher, len(context))
+            except Exception as exc:
+                error = str(exc)
+                logger.error("Chain error: %s", exc)
 
         # Step 5: fallback when Cypher returns nothing
         fallback_used = False
@@ -547,6 +562,30 @@ class FusionCypherAgent:
             out = _rerank_to_sentences(question, out, self._linker, top_sentences=3)
 
         return out
+
+    # ── Ranking bypass ────────────────────────────────────────────────────
+
+    def _run_ranking_cypher(self, category_name: str, limit: int = 15) -> tuple[str, list[dict]]:
+        """Run a reliable known-good Cypher for 'most frequent X in category Y'.
+
+        Returns (cypher_string, rows) so the caller can log the query.
+        """
+        cypher = (
+            "MATCH (c:Category {name: $cat})<-[:IN_CATEGORY]-(e:Entity)\n"
+            "OPTIONAL MATCH (p:Paper)-[:MENTIONS]->(e)\n"
+            "WITH e.name_norm AS entity, c.name AS category,\n"
+            "     count(DISTINCT p) AS papers\n"
+            "ORDER BY papers DESC\n"
+            "LIMIT $limit\n"
+            "RETURN entity, category, papers"
+        )
+        try:
+            with self._driver.session(database=self._db) as sess:
+                rows = [dict(r) for r in sess.run(cypher, cat=category_name, limit=limit)]
+            return cypher, rows
+        except Exception as exc:
+            logger.warning("Ranking cypher failed for %r: %s", category_name, exc)
+            return cypher, []
 
     # ── Fallback ─────────────────────────────────────────────────────────
 

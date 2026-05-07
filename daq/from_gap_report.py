@@ -52,6 +52,38 @@ def _load_gap_entities(report_path: Path, top_k: int) -> list[str]:
     return [name for name, _count in top_ents[:top_k]]
 
 
+# ── Domain relevance filter ───────────────────────────────────────────────────
+
+# Title-level terms suggesting fusion/plasma physics relevance.
+# Broad enough to avoid false rejections (e.g. "D-T cross section" has no
+# explicit "fusion" but clearly belongs to the domain).
+_FUSION_TERMS = frozenset([
+    "fusion", "plasma", "tokamak", "stellarator", "iter", "demo",
+    "magnetic confinement", "inertial confinement", "deuterium", "tritium",
+    "neutron", "reactor", "ignition", "nuclear", "pellet",
+    "divertor", "blanket", "sparc", "wendelstein", "jt-60", "d-t",
+    "confinement", "mhd", "magnetohydrodynamic", "scrape-off", "disruption",
+    "heating", "plasma current", "q-factor", "burn fraction",
+])
+
+# OpenAlex physical-sciences domain ID (filters out biology, medicine, etc.)
+_OA_PHYSICS_DOMAIN_FILTER = "primary_topic.domain.id:3"
+
+
+def _is_fusion_relevant(work: dict) -> bool:
+    """Return True if the work title or concept list looks fusion-relevant."""
+    title = (work.get("title") or "").lower()
+    if any(t in title for t in _FUSION_TERMS):
+        return True
+    # Also accept papers whose OpenAlex concepts include nuclear/plasma/fusion
+    concepts = work.get("concepts") or []
+    for c in concepts[:5]:
+        name = (c.get("display_name") or "").lower()
+        if any(t in name for t in _FUSION_TERMS):
+            return True
+    return False
+
+
 # ── OpenAlex keyword search ───────────────────────────────────────────────────
 
 def _search_by_keyword(
@@ -65,7 +97,7 @@ def _search_by_keyword(
         f"{_BASE_OA}/works",
         params={
             "search": keyword,
-            "filter": "type:article",
+            "filter": f"type:article,{_OA_PHYSICS_DOMAIN_FILTER}",
             "sort": "cited_by_count:desc",
             "per_page": str(min(per_page, 25)),  # OA caps at 200; 25 is plenty
         },
@@ -180,6 +212,9 @@ def run(
         works = _search_by_keyword(client, entity, papers_per_entity)
         added = 0
         for work in works:
+            if not _is_fusion_relevant(work):
+                logger.debug("  Skip (off-topic): %s", work.get("title"))
+                continue
             rec = _work_to_record(work, source_entity=entity)
             if rec is None:
                 continue
