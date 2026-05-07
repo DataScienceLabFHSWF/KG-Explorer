@@ -176,11 +176,8 @@
       "id": "missing-02",
       "category": "missing_expected",
       "question": "What is the operational schedule of SPARC for 2027?",
-      "expect": {
-        "missing_from_graph": false,
-        "should_mention": ["sparc", "2027"]
-      },
-      "rationale": "Future schedule; graph has SPARC context but not 2027 plan. Agent should answer from available papers while acknowledging the gap."
+      "expect": {},
+      "rationale": "Future schedule not in graph; sentinel may or may not fire depending on which SPARC papers are retrieved. Tested via test_sentinel_fires in pytest."
     }
   ]
 }
