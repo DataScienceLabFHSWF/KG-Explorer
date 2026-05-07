@@ -28,6 +28,7 @@ from typing import Any
 from daq.doi_extraction import PaperRecord, load_catalogue, save_catalogue
 from daq.downloader import PaperDownloader
 from daq.openalex_client import OpenAlexClient
+from analysis.entity_linker import _is_junk_entity
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +159,9 @@ def run(
     ``downloaded`` (always 0 in dry-run mode).
     """
     entities = _load_gap_entities(gap_report, top_k)
-    logger.info("Processing %d gap entities: %s", len(entities), entities)
+    # Filter out generic/junk entity names before querying OpenAlex
+    entities = [e for e in entities if not _is_junk_entity(e) and len(e) >= 4]
+    logger.info("Processing %d gap entities (after filtering): %s", len(entities), entities)
 
     # ── Load existing DOIs to skip duplicates ─────────────────────────────
     existing_dois: set[str] = set()
