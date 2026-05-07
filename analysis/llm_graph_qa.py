@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from typing import Any
 
 from dotenv import load_dotenv
@@ -23,9 +24,17 @@ from langchain_core.prompts import PromptTemplate
 from langchain_neo4j import GraphCypherQAChain, Neo4jGraph
 from langchain_ollama import ChatOllama
 
+from analysis.answer_gap_logger import log_answer_event
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+# Sentinel string that QA prompt asks the LLM to emit when grounded answer
+# is impossible. The agent intercepts this and routes the event to the
+# answer-gap logger so the gap-detection pipeline can later surface
+# systematic blind spots in the KG.
+MISSING_DATA_SENTINEL = "[MISSING_FROM_GRAPH]"
 
 # ── Cypher generation prompt ───────────────────────────────────────────────
 # Variables: {schema} (auto-injected by LangChain), {question}
@@ -33,32 +42,33 @@ logger = logging.getLogger(__name__)
 
 CYPHER_GENERATION_TEMPLATE = """\
 You are a Neo4j Cypher expert for a Fusion Energy Knowledge Graph.
-Generate ONLY valid Cypher. No markdown fences, no explanation, no comments.
+Generate ONLY valid **Cypher 5** for Neo4j. NO SQL keywords (no SELECT, FROM,
+WHERE x AS y, GROUP BY, JOIN). No markdown fences, no explanation, no comments.
 
 === GRAPH SCHEMA ===
 {schema}
 
 === NODE LABELS ===
-(:Entity   {{name_norm: STRING}})   — physics/engineering concepts; all values are LOWERCASE
-(:Paper    {{title: STRING, year_published: INTEGER, abstract: STRING}})
-(:Category {{name: STRING}})        — concept category buckets
+(:Entity   {{name_norm: STRING}})   — physics/engineering concepts; all LOWERCASE
+(:Paper    {{title: STRING, year_published: INTEGER, abstract: STRING,
+             first_author: STRING, scholarly_citations_count: INTEGER}})
+(:Category {{name: STRING}})        — 90 NER concept buckets
 (:Field    {{name: STRING}})        — raw NER outputs per paper
 
 === RELATIONSHIP TYPES ===
-(e1:Entity)-[:CO_OCCURS_WITH {{weight: INTEGER}}]-(e2:Entity)
+(e1:Entity)-[:CO_OCCURS_WITH {{weight: INTEGER, papers: LIST}}]-(e2:Entity)
 (p:Paper)-[:MENTIONS {{count: INTEGER}}]->(e:Entity)
 (e:Entity)-[:IN_CATEGORY]->(c:Category)
 (p:Paper)-[:HAS_FIELD]->(f:Field)
 
-=== CATEGORY VALUES (exact strings) ===
-"Device Type", "Plasma Property", "Diagnostic Method",
-"Material", "Process", "Organization", "Location"
+=== ACTUAL CATEGORY NAMES (use these strings exactly) ===
+{categories}
 
 === ENTITY NAME NOTE ===
 Entity.name_norm values are stored in LOWERCASE (e.g., "tokamak", "iter", "tritium").
-Always match with:  e.name_norm CONTAINS toLower('search term')
+ALWAYS match with:  e.name_norm CONTAINS toLower('search term')
 
-=== SIX CYPHER PATTERNS — memorise and reuse ===
+=== EIGHT CYPHER PATTERNS — pick the one that best fits the question ===
 
 # 1 — Entity info + mention stats
 MATCH (e:Entity)
@@ -98,31 +108,65 @@ RETURN [n IN nodes(path) | n.name_norm] AS path_nodes,
        length(path) AS hops
 LIMIT 3
 
-# 5 — Top entities within a category
+# 5 — Top entities within a category (use category names from list above)
 MATCH (e:Entity)-[:IN_CATEGORY]->(c:Category)
-WHERE c.name = 'Diagnostic Method'
+WHERE c.name = 'Nuclear Fusion Device Type'
 OPTIONAL MATCH (p:Paper)-[m:MENTIONS]->(e)
-WITH e.name_norm AS method,
+WITH e.name_norm AS device,
      count(DISTINCT p) AS papers,
      sum(m.count) AS mentions
-RETURN method, papers, mentions
+RETURN device, papers, mentions
 ORDER BY mentions DESC LIMIT 15
 
-# 6 — Papers mentioning two concepts together
-MATCH (p:Paper)-[:MENTIONS]->(e1:Entity),
-      (p)-[:MENTIONS]->(e2:Entity)
-WHERE e1.name_norm CONTAINS toLower('tokamak')
-  AND e2.name_norm CONTAINS toLower('tritium')
-RETURN DISTINCT p.title AS title, p.year_published AS year
-ORDER BY year DESC LIMIT 10
+# 6 — Latest / most-cited paper that mentions a concept
+MATCH (p:Paper)-[m:MENTIONS]->(e:Entity)
+WHERE e.name_norm CONTAINS toLower('iter')
+  AND p.year_published IS NOT NULL
+RETURN p.title AS title,
+       p.year_published AS year,
+       p.first_author AS author,
+       p.scholarly_citations_count AS citations,
+       left(p.abstract, 600) AS abstract_excerpt
+ORDER BY p.year_published DESC, p.scholarly_citations_count DESC
+LIMIT 5
 
-=== RULES ===
-- ALWAYS use e.name_norm CONTAINS toLower('term') — NEVER exact equality for entity names
-- ALWAYS add LIMIT (max 25 rows)
-- For aggregations: use WITH + RETURN, not RETURN *
-- For trends: group by year_published, ORDER BY year
-- For paths: CO_OCCURS_WITH*1..6
-- If the question asks for "most", "top", "most common" → ORDER BY + LIMIT
+# 7 — Definition / explanation: pull abstract excerpts that ground a concept
+MATCH (p:Paper)-[m:MENTIONS]->(e:Entity)
+WHERE e.name_norm CONTAINS toLower('lawson criterion')
+  AND p.abstract IS NOT NULL
+RETURN p.title AS title,
+       p.year_published AS year,
+       left(p.abstract, 800) AS abstract_excerpt,
+       m.count AS local_mentions
+ORDER BY m.count DESC, p.scholarly_citations_count DESC
+LIMIT 5
+
+# 8 — Free-text fulltext search across abstracts (true GraphRAG fallback)
+CALL db.index.fulltext.queryNodes('paper_text', 'lawson criterion ignition')
+YIELD node, score
+RETURN node.title AS title,
+       node.year_published AS year,
+       left(node.abstract, 800) AS abstract_excerpt,
+       score
+ORDER BY score DESC LIMIT 5
+
+=== CHOOSING A PATTERN ===
+- "What is X?" / "Define X" / "Why X?" / "How does X work?" → pattern 7 (or 8 if no entity match)
+- "Most/top/which X are most ..." → pattern 1, 2, or 5
+- "Trend / over time / since 1990" → pattern 3
+- "Connection / relate / link between A and B" → pattern 4
+- "Latest / newest / most cited paper on X" → pattern 6
+- Anything where the user wants prose understanding → ALWAYS prefer 7 or 8
+  so abstract text reaches the answer LLM.
+
+=== HARD RULES ===
+- Cypher only. NEVER write SELECT, FROM, GROUP BY, or SQL subqueries.
+- For "latest year" use:  ORDER BY p.year_published DESC LIMIT 1
+  Do NOT write things like  WHERE p.year = MAX(...).
+- ALWAYS use e.name_norm CONTAINS toLower('term') — never exact equality.
+- ALWAYS add LIMIT (≤ 25 rows; ≤ 5 when returning abstracts).
+- For aggregations: WITH + RETURN.
+- For paths: CO_OCCURS_WITH*1..6.
 
 Question: {question}
 
@@ -131,19 +175,40 @@ Cypher:"""
 # ── QA answer synthesis prompt ────────────────────────────────────────────
 
 QA_TEMPLATE = """\
-You are a scientific assistant specialising in nuclear fusion research.
-Answer the question using ONLY the knowledge graph data below.
-- Cite specific entity names, numbers, and years from the data.
-- If the data is empty or insufficient, say so clearly.
-- Structure longer answers with short bullet points.
-- Answer in the same language as the question.
+You are a scientific assistant specialising in nuclear fusion research,
+answering on top of a knowledge graph (KG) extracted by named entity recognition
+from 8,358 fusion-energy papers (1958–2024). Two kinds of evidence reach you:
 
-Knowledge graph results:
+  (a) Structured KG rows  — entity statistics, neighbours, paths, communities.
+  (b) Paper abstract excerpts — verbatim text from the underlying papers.
+
+Always prefer (b) for definitions, mechanisms, motivations, and physics
+reasoning. Use (a) for prevalence, trends, structural relations.
+
+Writing rules
+-------------
+- Cite specific entity names, numbers, paper titles, and years from the
+  evidence. Never invent facts that are not in the evidence.
+- For "what / why / how" questions, build the explanation from the abstract
+  excerpts. Quote short phrases inline using single quotes when useful.
+- Distinguish observed evidence from background reasoning explicitly. If the
+  abstracts cover (e.g.) the Lawson criterion, the D-T reaction-rate curve, the
+  ICF / MCF distinction, or the tritium fuel cycle, explain it in plain
+  language and ground it in the cited papers.
+- If the evidence does NOT contain enough to answer (no abstract excerpts and
+  only thin co-occurrence rows), state this explicitly and emit the literal
+  marker {sentinel} on its own line at the end of your answer. The marker is
+  used to log knowledge gaps; never include it when the answer is complete.
+- Structure longer answers with short bullet points. Answer in the same
+  language as the question.
+
+Evidence
+--------
 {context}
 
 Question: {question}
 
-Answer:"""
+Answer:""".replace("{sentinel}", MISSING_DATA_SENTINEL)
 
 
 # ── Agent class ────────────────────────────────────────────────────────────
@@ -192,13 +257,19 @@ class FusionCypherAgent:
         # LLM
         self._llm = ChatOllama(base_url=url, model=mdl, temperature=0)
 
+        # Pull the actual category names from the graph and inject into the
+        # Cypher prompt so the LLM never invents non-existent category labels.
+        cypher_template_filled = CYPHER_GENERATION_TEMPLATE.replace(
+            "{categories}", self._fetch_category_block()
+        )
+
         # LangChain GraphCypherQAChain
         self._chain = GraphCypherQAChain.from_llm(
             llm=self._llm,
             graph=self._graph,
             cypher_prompt=PromptTemplate(
                 input_variables=["schema", "question"],
-                template=CYPHER_GENERATION_TEMPLATE,
+                template=cypher_template_filled,
             ),
             qa_prompt=PromptTemplate(
                 input_variables=["context", "question"],
@@ -259,10 +330,16 @@ class FusionCypherAgent:
             except Exception as exc:
                 logger.warning("Entity linking error: %s", exc)
 
-        # Step 2: build augmented question (entity hints + conversation history)
+        # Step 2: GraphRAG abstract retrieval (always runs in parallel with
+        # the LLM-generated Cypher). This guarantees the answer prompt sees
+        # paper text whenever the question is answerable from the corpus.
+        abstract_hits = self._fetch_abstract_context(question, linked)
+        logger.info("GraphRAG retrieved %d abstract excerpts", len(abstract_hits))
+
+        # Step 3: build augmented question (entity hints + conversation history)
         augmented = _build_augmented_question(question, linked, history)
 
-        # Step 3: run LangChain chain
+        # Step 4: run LangChain chain (LLM-generated Cypher)
         cypher, context, answer, error = "", [], "", None
         try:
             result = self._chain.invoke({"query": augmented})
@@ -275,7 +352,7 @@ class FusionCypherAgent:
             error = str(exc)
             logger.error("Chain error: %s", exc)
 
-        # Step 4: fallback when Cypher returns nothing
+        # Step 5: fallback when Cypher returns nothing
         fallback_used = False
         if not error and not context and linked:
             logger.info("No rows returned — running fallback direct lookup")
@@ -283,27 +360,163 @@ class FusionCypherAgent:
             if fallback_rows:
                 context = fallback_rows
                 fallback_used = True
-                # Re-synthesise answer from fallback rows
-                try:
-                    ctx_str = "\n".join(str(r) for r in fallback_rows[:15])
-                    qa_text = QA_TEMPLATE.replace("{context}", ctx_str).replace("{question}", question)
-                    resp = self._llm.invoke(qa_text)
-                    answer = resp.content.strip() if hasattr(resp, "content") else str(resp).strip()
-                except Exception as exc2:
-                    logger.warning("Fallback answer synthesis failed: %s", exc2)
+
+        # Step 6: final answer synthesis using BOTH structured rows and
+        # abstract excerpts. We re-synthesise whenever GraphRAG produced
+        # abstracts (because LangChain only saw the structured rows) or when
+        # the fallback ran. This is the "real GraphRAG" merge step.
+        if abstract_hits or fallback_used or not answer:
+            try:
+                merged = _format_evidence(context, abstract_hits)
+                qa_text = (
+                    QA_TEMPLATE
+                    .replace("{context}", merged)
+                    .replace("{question}", question)
+                )
+                resp = self._llm.invoke(qa_text)
+                answer = resp.content.strip() if hasattr(resp, "content") else str(resp).strip()
+            except Exception as exc2:
+                logger.warning("Final answer synthesis failed: %s", exc2)
+
+        # Step 7: detect missing-data sentinel and log to the answer-gap store.
+        missing_from_graph = MISSING_DATA_SENTINEL in (answer or "")
+        if missing_from_graph:
+            answer = answer.replace(MISSING_DATA_SENTINEL, "").strip()
+        # Heuristic: also log if no abstracts AND no structured rows reached us.
+        no_evidence = (not abstract_hits) and (not context)
+        if missing_from_graph or no_evidence:
+            try:
+                log_answer_event(
+                    question=question,
+                    linked_entities=[n for n, _ in linked],
+                    n_rows=len(context),
+                    n_abstracts=len(abstract_hits),
+                    cypher=cypher,
+                    sentinel=missing_from_graph,
+                )
+            except Exception as exc3:
+                logger.warning("Could not log answer-gap event: %s", exc3)
 
         return {
             "answer": answer,
             "cypher": cypher,
             "context": context,
+            "abstracts": abstract_hits,
             "linked_entities": linked,
             "fallback_used": fallback_used,
+            "missing_from_graph": missing_from_graph,
             "error": error,
         }
 
     def schema_summary(self) -> str:
         """Return the Neo4j schema string loaded by LangChain."""
         return getattr(self._graph, "schema", None) or "(schema not loaded)"
+
+    # ── Category / abstract retrieval helpers ────────────────────────────
+
+    def _fetch_category_block(self, top_n: int = 30) -> str:
+        """Read the top-N category names from the live KG so the Cypher prompt
+        always reflects what actually exists."""
+        try:
+            with self._driver.session(database=self._db) as sess:
+                rows = list(sess.run(
+                    "MATCH (c:Category)<-[:IN_CATEGORY]-(e) "
+                    "RETURN c.name AS name, count(e) AS cnt "
+                    "ORDER BY cnt DESC LIMIT $top_n",
+                    top_n=top_n,
+                ))
+            names = [f'"{r["name"]}"  (n={r["cnt"]})' for r in rows]
+            return "\n".join(f"  {n}" for n in names)
+        except Exception as exc:
+            logger.warning("Could not fetch categories from KG: %s", exc)
+            return '  (failed to load \u2014 use any plausible NER category name)'
+
+    def _fetch_abstract_context(
+        self,
+        question: str,
+        linked: list[tuple[str, float]],
+        per_entity: int = 2,
+        fulltext_top: int = 3,
+        max_chars: int = 700,
+    ) -> list[dict]:
+        """Real GraphRAG retrieval. Two strategies are merged:
+
+        1. **Entity-anchored**: for each linked entity (top-3), fetch the few
+           most-mentioning abstracts. Guarantees grounding when the linker
+           found at least one entity.
+        2. **Fulltext fallback**: if no entities link, run the question through
+           the ``paper_text`` Lucene index for free-text retrieval.
+
+        Returned dicts have keys ``title``, ``year``, ``excerpt``, ``source``.
+        """
+        out: list[dict] = []
+        seen_titles: set[str] = set()
+
+        # 1) Entity-anchored
+        if linked:
+            try:
+                names = [n for n, _ in linked[:3]]
+                with self._driver.session(database=self._db) as sess:
+                    rows = sess.run(
+                        """
+                        UNWIND $names AS qname
+                        MATCH (e:Entity) WHERE e.name_norm = qname
+                        MATCH (p:Paper)-[m:MENTIONS]->(e)
+                        WHERE p.abstract IS NOT NULL
+                        WITH qname, p, m
+                        ORDER BY m.count DESC,
+                                 coalesce(p.scholarly_citations_count, 0) DESC
+                        WITH qname, collect({title: p.title, year: p.year_published,
+                                             abstract: p.abstract, mentions: m.count})[..$per_entity] AS docs
+                        UNWIND docs AS d
+                        RETURN qname AS entity, d.title AS title, d.year AS year,
+                               d.abstract AS abstract, d.mentions AS mentions
+                        """,
+                        names=names, per_entity=per_entity,
+                    )
+                    for r in rows:
+                        title = (r["title"] or "")
+                        if title in seen_titles:
+                            continue
+                        seen_titles.add(title)
+                        out.append({
+                            "title": title,
+                            "year": r["year"],
+                            "excerpt": (r["abstract"] or "")[:max_chars],
+                            "source": f"entity:{r['entity']}",
+                        })
+            except Exception as exc:
+                logger.warning("Entity-anchored retrieval failed: %s", exc)
+
+        # 2) Fulltext fallback (always run; cheap and complementary)
+        try:
+            ft_query = _sanitize_for_lucene(question)
+            if ft_query:
+                with self._driver.session(database=self._db) as sess:
+                    rows = sess.run(
+                        "CALL db.index.fulltext.queryNodes('paper_text', $q) "
+                        "YIELD node, score "
+                        "WHERE node.abstract IS NOT NULL "
+                        "RETURN node.title AS title, node.year_published AS year, "
+                        "       node.abstract AS abstract, score "
+                        "ORDER BY score DESC LIMIT $top",
+                        q=ft_query, top=fulltext_top,
+                    )
+                    for r in rows:
+                        title = (r["title"] or "")
+                        if title in seen_titles:
+                            continue
+                        seen_titles.add(title)
+                        out.append({
+                            "title": title,
+                            "year": r["year"],
+                            "excerpt": (r["abstract"] or "")[:max_chars],
+                            "source": f"fulltext:{r['score']:.2f}",
+                        })
+        except Exception as exc:
+            logger.warning("Fulltext retrieval failed: %s", exc)
+
+        return out
 
     # ── Fallback ─────────────────────────────────────────────────────────
 
@@ -376,3 +589,44 @@ def _build_augmented_question(
 
     parts.append(f"Question: {question}")
     return "\n".join(parts)
+
+
+# Lucene reserved characters that must be stripped/escaped before being
+# passed to db.index.fulltext.queryNodes.
+_LUCENE_BAD = re.compile(r'[+\-!(){}\[\]^"~*?:\\/]|&&|\|\|')
+def _sanitize_for_lucene(text: str) -> str:
+    """Strip Lucene reserved characters and very short tokens from a question
+    so it can be passed safely as a fulltext query."""
+    cleaned = _LUCENE_BAD.sub(" ", text)
+    tokens = [t for t in cleaned.split() if len(t) > 2]
+    # Cap to avoid pathological recall; most questions are short anyway
+    return " ".join(tokens[:12])
+
+
+def _format_evidence(rows: list[dict], abstracts: list[dict]) -> str:
+    """Render the joint context (structured rows + abstract excerpts) for the
+    answer-synthesis prompt."""
+    parts: list[str] = []
+
+    if rows:
+        parts.append("STRUCTURED KG ROWS")
+        parts.append("------------------")
+        for r in rows[:15]:
+            parts.append(f"- {r}")
+        parts.append("")
+
+    if abstracts:
+        parts.append("ABSTRACT EXCERPTS (verbatim from the underlying papers)")
+        parts.append("-------------------------------------------------------")
+        for i, doc in enumerate(abstracts[:6], 1):
+            year = f" ({doc['year']})" if doc.get("year") else ""
+            src = doc.get("source", "")
+            parts.append(f"[{i}] {doc.get('title','(untitled)')}{year}  <{src}>")
+            excerpt = (doc.get("excerpt") or "").strip().replace("\n", " ")
+            parts.append(f"    {excerpt}")
+            parts.append("")
+
+    if not parts:
+        return "(no evidence retrieved)"
+    return "\n".join(parts)
+

@@ -104,8 +104,13 @@ with st.sidebar:
     )
     ollama_model = st.text_input(
         "Model",
-        value=os.getenv("OLLAMA_MODEL", "nemotron-3-nano:4b"),
-        help="Must be pulled in Ollama first. Other options: mistral, llama3.1:8b, qwen2.5:7b",
+        value=os.getenv("OLLAMA_MODEL", "gemma4:e2b"),
+        help=(
+            "Must be pulled in Ollama first. "
+            "Default: gemma4:e2b (compact, good Cypher). "
+            "Alternatives: qwen2.5:7b, llama3.1:8b. "
+            "Avoid nemotron-3-nano:4b — tends to hallucinate SQL."
+        ),
         key="ollama_model",
     )
 
@@ -115,11 +120,12 @@ with st.sidebar:
 
 **2. Pull the model** (once, if not already done)
 ```bash
-ollama pull nemotron-3-nano:4b
+ollama pull gemma4:e2b
 ```
 **3. Reload this page** after the model is ready.
 
-_Tip: nemotron-3-nano:4b (2.8 GB) is fast and compact._
+_Tip: gemma4:e2b is the recommended default. For higher quality on
+long/complex questions, switch to qwen2.5:7b or llama3.1:8b._
 """)
 
     st.divider()
@@ -164,7 +170,7 @@ def _get_agent(ollama_url: str, model: str):
 def get_agent():
     return _get_agent(
         st.session_state.get("ollama_url", "http://localhost:11434"),
-        st.session_state.get("ollama_model", "mistral"),
+        st.session_state.get("ollama_model", "gemma4:e2b"),
     )
 
 
@@ -188,8 +194,10 @@ def _render_assistant_msg(msg: dict):
     answer = msg.get("answer", "")
     cypher = msg.get("cypher", "")
     context = msg.get("context", [])
+    abstracts = msg.get("abstracts", [])
     linked = msg.get("linked_entities", [])
     fallback = msg.get("fallback_used", False)
+    missing = msg.get("missing_from_graph", False)
     error = msg.get("error")
 
     if error:
@@ -217,17 +225,32 @@ def _render_assistant_msg(msg: dict):
     pills = []
     if context:
         pills.append(f"{len(context)} KG rows")
+    if abstracts:
+        pills.append(f"{len(abstracts)} abstracts")
     if cypher:
         hop_hint = "multi-hop" if ("shortestPath" in cypher or "*.." in cypher) else "direct"
         pills.append(hop_hint)
     if fallback:
         pills.append("⚡ fallback query")
+    if missing:
+        pills.append("⚠ missing-from-graph")
 
     if pills:
         st.markdown(
             " ".join(f'<span class="ctx-pill">{p}</span>' for p in pills),
             unsafe_allow_html=True,
         )
+
+    # ── Abstract excerpts (true GraphRAG evidence)
+    if abstracts:
+        with st.expander(f"Paper abstract excerpts ({len(abstracts)} sources)", expanded=False):
+            for i, doc in enumerate(abstracts, 1):
+                year = f" ({doc.get('year', '?')})"
+                title = doc.get('title', '(untitled)')
+                src = doc.get('source', '')
+                st.markdown(f"**[{i}] {title}**{year}  &nbsp;·&nbsp; *{src}*")
+                excerpt = (doc.get('excerpt') or '').strip()
+                st.markdown(f"<div style='font-size:0.88rem;color:#bbb;margin-bottom:10px'>{excerpt}</div>", unsafe_allow_html=True)
 
     # ── Collapsible Cypher section
     if cypher:

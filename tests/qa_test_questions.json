@@ -1,0 +1,185 @@
+{
+  "_meta": {
+    "purpose": "Behavioural test set for the FusionCypherAgent. Each item is a question the system SHOULD be able to answer using the KG + abstract retrieval. Failures are logged via analysis.answer_gap_logger and aggregated by analysis.answer_gap_report, so the test suite doubles as the feeder for the systematic gap report.",
+    "version": "2026-05",
+    "categories": {
+      "definition": "What is X? - relies on abstract excerpts (pattern 7/8).",
+      "mechanism": "How / why questions - needs physics reasoning grounded in abstracts.",
+      "structural": "Which entities are most X? - pure KG aggregation (patterns 1/2/5).",
+      "trend": "Time-series questions (pattern 3).",
+      "path": "Connectivity questions (pattern 4).",
+      "comparative": "X vs Y questions - needs both KG stats and abstracts.",
+      "missing_expected": "Questions we EXPECT to fail today; they trigger the gap-report pipeline."
+    }
+  },
+  "questions": [
+    {
+      "id": "feedback-01",
+      "category": "definition",
+      "question": "What is a tokamak?",
+      "expect": {
+        "must_link_entities": ["tokamak"],
+        "must_have_abstracts": true,
+        "min_answer_chars": 200,
+        "must_not_contain": ["SELECT", "FROM ", "GROUP BY"],
+        "should_mention": ["plasma", "magnetic"]
+      },
+      "source": "Raul feedback - was hallucinating SQL"
+    },
+    {
+      "id": "feedback-02",
+      "category": "structural",
+      "question": "Which fusion devices appear most often in the literature?",
+      "expect": {
+        "must_have_rows": true,
+        "min_rows": 3,
+        "should_mention": ["tokamak", "stellarator"]
+      },
+      "source": "Raul feedback - was returning wrong/conflated answer"
+    },
+    {
+      "id": "feedback-03",
+      "category": "mechanism",
+      "question": "What fuel do fusion devices use and why?",
+      "expect": {
+        "must_have_abstracts": true,
+        "min_answer_chars": 300,
+        "should_mention": ["deuterium", "tritium"]
+      },
+      "source": "Raul feedback - no 'why' reasoning"
+    },
+    {
+      "id": "feedback-04",
+      "category": "mechanism",
+      "question": "Why is the deuterium-tritium reaction preferred over D-D or D-He3?",
+      "expect": {
+        "must_have_abstracts": true,
+        "should_mention": ["cross section", "temperature"]
+      },
+      "source": "Raul feedback image - D-T reaction-rate curve peak at ~60 keV"
+    },
+    {
+      "id": "feedback-05",
+      "category": "comparative",
+      "question": "What is the difference between inertial and magnetic confinement fusion?",
+      "expect": {
+        "must_have_abstracts": true,
+        "should_mention": ["inertial", "magnetic"]
+      },
+      "source": "Raul feedback image - ICF vs MCF schematic"
+    },
+    {
+      "id": "feedback-06",
+      "category": "mechanism",
+      "question": "How is the energy released in a D-T fusion reaction distributed between the alpha particle and the neutron?",
+      "expect": {
+        "must_have_abstracts": true,
+        "should_mention": ["neutron"]
+      },
+      "source": "Raul feedback image - 80% energy carried by neutron",
+      "expected_to_fail": "likely - tests whether abstracts cover quantitative energy split"
+    },
+    {
+      "id": "definition-01",
+      "category": "definition",
+      "question": "What is a stellarator?",
+      "expect": {
+        "must_link_entities": ["stellarator"],
+        "must_have_abstracts": true,
+        "should_mention": ["coil", "magnetic"]
+      }
+    },
+    {
+      "id": "definition-02",
+      "category": "definition",
+      "question": "What is the divertor in a tokamak?",
+      "expect": {
+        "must_link_entities": ["divertor"],
+        "must_have_abstracts": true,
+        "should_mention": ["plasma"]
+      }
+    },
+    {
+      "id": "definition-03",
+      "category": "definition",
+      "question": "What is the Lawson criterion?",
+      "expect": {
+        "must_have_abstracts": true,
+        "should_mention": ["temperature", "density"]
+      },
+      "expected_to_fail": "candidate - depends on whether 'lawson criterion' was extracted as an entity"
+    },
+    {
+      "id": "structural-01",
+      "category": "structural",
+      "question": "Which entities are most connected to ITER?",
+      "expect": {
+        "must_link_entities": ["iter"],
+        "must_have_rows": true,
+        "min_rows": 5
+      }
+    },
+    {
+      "id": "structural-02",
+      "category": "structural",
+      "question": "Which categories contain the most entities?",
+      "expect": {
+        "must_have_rows": true,
+        "min_rows": 5
+      }
+    },
+    {
+      "id": "trend-01",
+      "category": "trend",
+      "question": "How has research on ITER evolved over the years?",
+      "expect": {
+        "must_have_rows": true,
+        "min_rows": 3
+      }
+    },
+    {
+      "id": "trend-02",
+      "category": "trend",
+      "question": "Show the publication trend for stellarator research.",
+      "expect": {
+        "must_have_rows": true,
+        "min_rows": 3
+      }
+    },
+    {
+      "id": "path-01",
+      "category": "path",
+      "question": "Find a path between divertor and tritium in the knowledge graph.",
+      "expect": {
+        "must_link_entities": ["divertor", "tritium"]
+      }
+    },
+    {
+      "id": "comparative-01",
+      "category": "comparative",
+      "question": "Compare tokamak and stellarator confinement.",
+      "expect": {
+        "must_link_entities": ["tokamak", "stellarator"],
+        "must_have_abstracts": true
+      }
+    },
+    {
+      "id": "missing-01",
+      "category": "missing_expected",
+      "question": "What is the cost in dollars of building ITER?",
+      "expect": {
+        "missing_from_graph": true
+      },
+      "rationale": "Quantitative cost data is unlikely to be in NER abstracts; should trigger sentinel."
+    },
+    {
+      "id": "missing-02",
+      "category": "missing_expected",
+      "question": "What is the operational schedule of SPARC for 2027?",
+      "expect": {
+        "missing_from_graph": true
+      },
+      "rationale": "Future schedule + recent device; tests gap-report pipeline."
+    }
+  ]
+}

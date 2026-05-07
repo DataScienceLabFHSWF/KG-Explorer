@@ -285,3 +285,75 @@ All in `requirements.txt`. Key additions since the original setup:
 2. **Windows cp1252 encoding** — Unicode characters in console output cause crashes. ASCII fallbacks have been applied to `run_analysis.py` and `daq/pipeline.py`, but other modules may still have Unicode in print statements.
 3. **IOP publisher bot protection** — Downloads from iopscience.iop.org are blocked by Radware. The arXiv fallback covers many of these papers.
 4. **No CI/CD** — No automated testing or deployment pipeline.
+
+---
+
+## Roadmap — Answer-Gap Reports (post Raúl review, 2026)
+
+The chat agent now performs real GraphRAG: it merges Cypher-extracted KG rows
+with abstract excerpts retrieved by an entity-anchored + Lucene fulltext
+search (`paper_text` index over title+abstract). Whenever the synthesis LLM
+cannot ground an answer it emits a `[MISSING_FROM_GRAPH]` sentinel, which is
+captured by [analysis/answer_gap_logger.py](../analysis/answer_gap_logger.py)
+and aggregated by
+[analysis/answer_gap_report.py](../analysis/answer_gap_report.py).
+
+This produces a *new* class of gap evidence — **questions the system was
+asked but could not answer** — orthogonal to the structural / triadic /
+diffusion gaps already implemented. The roadmap below ties them together.
+
+### R1 — Auto-publish answer-gap reports
+
+Run `python -m analysis.answer_gap_report` weekly (or on each Streamlit
+shutdown) and write `output/answer_gap_report.{json,md}`. Add a third tab to
+the chat UI surfacing the top failed-question entities so a human curator
+sees, at a glance, which concepts the KG keeps tripping over.
+
+### R2 — Cluster failed questions by linked entities
+
+Two failure modes deserve different treatments:
+
+- **Unlinked questions** (entity linker returned nothing) → the user asked
+  about a concept the KG does not represent. Candidate for adding a new
+  entity / category, or re-running NER on a focused sub-corpus.
+- **Linked-but-unanswerable** (linker found e.g.\ `tokamak` but the answer
+  was insufficient) → the entity exists but the relations needed to answer
+  ("What fuel does it use?", "Why D-T?") are missing from the typed schema.
+
+Cluster the JSONL log by `linked_entities`-tuple and rank clusters by size:
+the largest clusters point at the next typed-relation to add (e.g.\
+`:Reaction(name)` linked to devices via `:USES_FUEL`, with reaction
+properties `Q_value`, `peak_T`, etc.).
+
+### R3 — Feed gap clusters into `gap_analysis_agent.py`
+
+Add a new hypothesis type `answer_gap` to
+[analysis/gap_analysis_agent.py](../analysis/gap_analysis_agent.py) so the
+existing gap pipeline (triadic-closure deficit + diffusion + bridge-edge)
+can be cross-referenced with the *behavioural* gaps from chat. A concept
+that scores high on all four signals (low triadic closure, low PPR
+coverage, weak bridge support, AND surfaces in many failed questions)
+becomes a top-priority enrichment target.
+
+### R4 — Targeted PDF ingestion driven by gap reports
+
+The `daq/` pipeline already supports DOI-driven ingestion. A future
+extension reads the top-K entities from the answer-gap report, queries
+OpenAlex for the most-cited papers mentioning each, downloads the PDFs,
+re-runs NER on them, and re-loads the KG. This closes the loop:
+chat-failure → gap report → focused acquisition → KG enrichment → fewer
+chat failures.
+
+### R5 — Typed relations from focused IE
+
+The expert-feedback images (D-T fusion-energy schematic with 80 % in the
+neutron, reaction-rate-vs-temperature curve with the D-T peak near
+60 keV, ICF vs MCF schematic) all expose a structural blind spot: the
+current schema has only `:MENTIONS` and `:CO_OCCURS_WITH`. To answer
+"why deuterium-tritium?" the KG needs typed edges such as
+`(:Device)-[:USES_FUEL]->(:Reaction)`,
+`(:Reaction)-[:HAS_OPTIMAL_TEMPERATURE]->(:Quantity)`, and
+`(:Concept)-[:IS_TYPE_OF]->(:ConfinementClass)`. R5 is a focused IE pass
+restricted to the highest-frequency entities surfaced by the answer-gap
+report, so the labour cost is bounded by the gap evidence rather than
+applied to all 51 k entities at once.
