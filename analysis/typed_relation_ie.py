@@ -210,14 +210,16 @@ def _fetch_context(driver: Any, subj: str, obj: str, max_sentences: int = 3) -> 
     """Retrieve context sentences from abstracts where both entities appear."""
     # Build a Lucene query for the fulltext index
     # Use both entity names; OR is fine — we filter in Cypher anyway
-    query = f'"{_escape_lucene(subj)}" "{_escape_lucene(obj)}"'
+    lucene_query = f'"{_escape_lucene(subj)}" "{_escape_lucene(obj)}"'
     with driver.session() as session:
         rows = session.run(
             _QUERY_CONTEXT,
-            query=query,
-            subj=subj,
-            obj=obj,
-            max_sentences=max_sentences,
+            {
+                "query": lucene_query,
+                "subj": subj,
+                "obj": obj,
+                "max_sentences": max_sentences,
+            },
         ).data()
     return [r["sent"] for r in rows]
 
