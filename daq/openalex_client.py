@@ -156,21 +156,19 @@ class OpenAlexClient:
                     break
 
         # ── Repository / preprint fallback ────────────────────────────
-        # Scan all locations for open-access repository copies
-        # (arXiv preprints, OSTI, Zenodo, institutional repos).
-        repo_pdf_url = None
-        repo_name = None
-        repo_landing = None
-
-        # Collect all OA repo locations
+        # Scan ALL locations for arXiv first, then other repositories.
+        # We check is_oa=False locations too — arXiv preprints are sometimes
+        # listed alongside a closed publisher version.
         repo_candidates: list[tuple[int, dict]] = []
         for loc in work.get("locations", []):
             source = loc.get("source") or {}
-            src_type = source.get("type", "")
-            if src_type != "repository" or not loc.get("is_oa"):
-                continue
             src_name = (source.get("display_name") or "").lower()
-            # Assign priority: known repos first, others last
+            # Always include arXiv regardless of type/is_oa flag
+            is_arxiv = "arxiv" in src_name or "arxiv.org" in (loc.get("landing_page_url") or "")
+            src_type = source.get("type", "")
+            is_repo_oa = src_type == "repository" and loc.get("is_oa")
+            if not (is_arxiv or is_repo_oa):
+                continue
             priority = len(cls._REPO_PRIORITY)
             for i, keyword in enumerate(cls._REPO_PRIORITY):
                 if keyword in src_name:
@@ -179,16 +177,27 @@ class OpenAlexClient:
             repo_candidates.append((priority, loc))
 
         # Pick the best repository location
+        repo_pdf_url = None
+        repo_name = None
         if repo_candidates:
             repo_candidates.sort(key=lambda x: x[0])
             best_repo = repo_candidates[0][1]
             repo_pdf_url = best_repo.get("pdf_url")
             repo_landing = best_repo.get("landing_page_url")
             repo_name = (best_repo.get("source") or {}).get("display_name")
-            # If no direct PDF but there is a landing page, keep it
-            # (the downloader will try the landing page as fallback)
-            if not repo_pdf_url and repo_landing:
-                repo_pdf_url = repo_landing
+            # For arXiv: construct a direct /pdf/ URL if we only have a landing page
+            if repo_pdf_url is None and repo_landing:
+                import re as _re
+                arxiv_m = _re.search(r"arxiv\.org/abs/([\d.v]+)", repo_landing)
+                if arxiv_m:
+                    repo_pdf_url = f"https://arxiv.org/pdf/{arxiv_m.group(1)}"
+                else:
+                    # OSTI: biblio/NNNN -> servlets/purl/NNNN (direct PDF)
+                    osti_m = _re.search(r"osti\.gov/biblio/(\d+)", repo_landing)
+                    if osti_m:
+                        repo_pdf_url = f"https://www.osti.gov/servlets/purl/{osti_m.group(1)}"
+                    else:
+                        repo_pdf_url = repo_landing
 
         return {
             "openalex_id": work.get("id"),

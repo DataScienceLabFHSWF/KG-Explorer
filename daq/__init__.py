@@ -20,7 +20,7 @@ kgbuilder_bridge
     Package downloaded papers for KnowledgeGraphBuilder consumption.
 """
 
-from daq.doi_extraction import PaperRecord, build_catalogue
+from daq.doi_extraction import PaperRecord, build_catalogue, load_local_pdfs
 from daq.openalex_client import OpenAlexClient
 from daq.downloader import PaperDownloader
 from daq.pipeline import DAQPipeline

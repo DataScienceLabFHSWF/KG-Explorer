@@ -38,6 +38,7 @@ class PaperRecord:
     first_author: str | None = None
     citations: int | None = None
     source_file: str | None = None
+    local_pdf_path: str | None = None
 
     # Populated during resolution
     openalex_id: str | None = None
@@ -51,7 +52,45 @@ class PaperRecord:
     repository_name: str | None = None  # e.g. "arXiv", "OSTI", "Zenodo"
 
     def to_dict(self) -> dict[str, Any]:
-        return {k: v for k, v in asdict(self).items() if v is not None}
+        result: dict[str, Any] = {}
+        for k, v in asdict(self).items():
+            if v is None:
+                continue
+            if k == "local_pdf_path":
+                result[k] = str(v)
+            else:
+                result[k] = v
+        return result
+
+
+# ── Local PDF discovery ───────────────────────────────────────────────────────
+
+def load_local_pdfs(pdf_dir: Path, prefix: str = "local_pdf") -> list[PaperRecord]:
+    """Scan a local directory for PDF files and create PaperRecord entries.
+
+    Local PDFs are included in the DAQ pipeline as pre-existing full-text
+    documents. They are copied into the PDF output directory and packaged
+    for KGBuilder alongside downloaded papers.
+    """
+    pdf_dir = pdf_dir.expanduser().resolve()
+    if not pdf_dir.exists() or not pdf_dir.is_dir():
+        return []
+
+    records: list[PaperRecord] = []
+    for path in sorted(pdf_dir.rglob("*.pdf")):
+        if not path.is_file():
+            continue
+        title = path.stem.replace("_", " ").replace("-", " ").strip()
+        if not title:
+            title = path.name
+        paper_id = f"{prefix}:{path.relative_to(pdf_dir).as_posix()}"
+        records.append(PaperRecord(
+            paper_id=paper_id,
+            title=title,
+            source_file=str(pdf_dir),
+            local_pdf_path=str(path.resolve()),
+        ))
+    return records
 
 
 # ── DOI extraction ────────────────────────────────────────────────────────────
@@ -194,6 +233,7 @@ def load_catalogue(path: Path) -> list[PaperRecord]:
             first_author=entry.get("first_author"),
             citations=entry.get("citations"),
             source_file=entry.get("source_file"),
+            local_pdf_path=entry.get("local_pdf_path"),
             openalex_id=entry.get("openalex_id"),
             oa_status=entry.get("oa_status"),
             pdf_url=entry.get("pdf_url"),

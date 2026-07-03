@@ -157,20 +157,38 @@ class PaperDownloader:
             logger.debug("Already exists: %s", dest.name)
             return dest
 
-        # Collect candidate URLs in priority order
+        # Collect candidate URLs in priority order.
+        # arXiv is always tried first — reliable, no bot-detection, always PDF.
         urls: list[tuple[str, str]] = []
 
-        # Publisher OA PDF (only for non-closed papers)
+        # 1. arXiv takes unconditional priority
+        if record.repository_pdf_url and "arxiv.org" in (record.repository_pdf_url or ""):
+            urls.append((record.repository_pdf_url, "arXiv"))
+
+        # 2. Publisher OA PDF (non-closed papers)
         if record.oa_status not in ("closed", "unknown", None):
-            if record.pdf_url:
+            if record.pdf_url and "arxiv.org" not in (record.pdf_url or ""):
                 urls.append((record.pdf_url, "publisher OA"))
             if record.landing_url and record.landing_url != record.pdf_url:
                 urls.append((record.landing_url, "landing page"))
 
-        # Repository / preprint fallback (for ALL papers, including closed)
-        if record.repository_pdf_url:
+        # 3. Other repository / preprint fallbacks (OSTI, Zenodo, etc.)
+        if record.repository_pdf_url and "arxiv.org" not in (record.repository_pdf_url or ""):
             urls.append((record.repository_pdf_url,
                          f"repository ({record.repository_name or 'unknown'})"))
+
+        if record.local_pdf_path:
+            local_path = Path(record.local_pdf_path)
+            if local_path.exists() and local_path.is_file():
+                dest = self.output_dir / _make_filename(record)
+                try:
+                    if not dest.exists() or dest.stat().st_size == 0:
+                        dest.write_bytes(local_path.read_bytes())
+                    logger.info("Copied local PDF: %s", dest.name)
+                    return dest
+                except OSError as exc:
+                    logger.debug("Failed to copy local PDF %s: %s", local_path, exc)
+                    return None
 
         if not urls:
             return None

@@ -47,6 +47,16 @@ def main(argv: list[str] | None = None) -> None:
         help="Path to a previously saved catalogue.json to reuse",
     )
     parser.add_argument(
+        "--local-pdf-dir",
+        default=None,
+        help="Directory containing local PDF files to include in the DAQ pipeline",
+    )
+    parser.add_argument(
+        "--ontology-path",
+        default=None,
+        help="Path to an OWL ontology to include in the KGBuilder package",
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=None,
@@ -71,6 +81,8 @@ def main(argv: list[str] | None = None) -> None:
         kgbuilder_output_dir=args.kgbuilder_output,
         email=args.email,
         catalogue_path=args.catalogue,
+        local_pdf_dir=args.local_pdf_dir,
+        ontology_path=args.ontology_path,
         limit=args.limit,
     )
     stats = pipe.run()

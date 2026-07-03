@@ -142,6 +142,7 @@ def prepare_kgbuilder_input(
     downloaded: list[tuple[PaperRecord, Path]],
     output_dir: Path,
     categories: list[str] | None = None,
+    ontology_path: Path | None = None,
 ) -> dict[str, Path]:
     """Package downloaded PDFs + metadata for KGBuilder consumption.
 
@@ -153,6 +154,8 @@ def prepare_kgbuilder_input(
         Target directory (will be created if absent).
     categories
         If provided, generates a seed OWL ontology from these NER categories.
+    ontology_path
+        Optional path to an existing OWL ontology to copy into the KGBuilder package.
 
     Returns
     -------
@@ -179,8 +182,12 @@ def prepare_kgbuilder_input(
         "manifest": manifest_path,
     }
 
-    # OWL stub
-    if categories:
+    # OWL ontology
+    if ontology_path and Path(ontology_path).exists():
+        owl_path = output_dir / "ontology" / Path(ontology_path).name
+        shutil.copy2(Path(ontology_path), owl_path)
+        result["ontology"] = owl_path
+    elif categories:
         owl_path = output_dir / "ontology" / "fusion_ner.owl"
         generate_owl_stub(categories, owl_path)
         result["ontology"] = owl_path

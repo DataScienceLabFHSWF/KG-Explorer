@@ -29,7 +29,13 @@ from typing import Any
 
 from tqdm import tqdm
 
-from daq.doi_extraction import PaperRecord, build_catalogue, save_catalogue, load_catalogue
+from daq.doi_extraction import (
+    PaperRecord,
+    build_catalogue,
+    load_catalogue,
+    load_local_pdfs,
+    save_catalogue,
+)
 from daq.openalex_client import OpenAlexClient
 from daq.downloader import PaperDownloader
 from daq.kgbuilder_bridge import prepare_kgbuilder_input
@@ -53,14 +59,16 @@ class PipelineStats:
     oa_unknown: int = 0
     with_repo_preprint: int = 0   # have arXiv/OSTI/Zenodo version
     downloadable: int = 0         # have any PDF URL (publisher or repo)
-    downloaded: int = 0
+    local_pdfs: int = 0
     elapsed_seconds: float = 0.0
+    oa_found: int = 0
 
     def __str__(self) -> str:
         return (
             f"DAQ Pipeline Stats\n"
             f"  Total papers       : {self.total_papers}\n"
             f"  With DOI           : {self.with_doi}\n"
+            f"  Local PDFs         : {self.local_pdfs}\n"
             f"  Enriched via OA    : {self.enriched}\n"
             f"  -- OA breakdown ---------\n"
             f"    gold             : {self.oa_gold}\n"
@@ -102,6 +110,8 @@ class DAQPipeline:
     kgbuilder_output_dir: str | Path = "output/kgbuilder_input/"
     email: str = "fusiondaq@example.com"
     catalogue_path: str | Path | None = None
+    local_pdf_dir: str | Path | None = None
+    ontology_path: str | Path | None = None
     limit: int | None = None
     categories: list[str] | None = None
 
@@ -121,15 +131,35 @@ class DAQPipeline:
             logger.info("  Loaded %d records from %s", len(catalogue), self.catalogue_path)
         else:
             catalogue = build_catalogue(data_dir)
-            cat_path = output_dir / "catalogue.json"
-            save_catalogue(catalogue, cat_path)
-            logger.info("  Built catalogue: %d unique papers → %s", len(catalogue), cat_path)
+            logger.info("  Built catalogue: %d unique papers", len(catalogue))
+
+        if self.local_pdf_dir:
+            local_records = load_local_pdfs(Path(self.local_pdf_dir))
+            if local_records:
+                existing_ids = {r.paper_id for r in catalogue}
+                added = 0
+                for rec in local_records:
+                    if rec.paper_id not in existing_ids:
+                        catalogue.append(rec)
+                        added += 1
+                logger.info("  Added %d local PDF records from %s", added, self.local_pdf_dir)
+        else:
+            local_records = []
+
+        cat_path = output_dir / "catalogue.json"
+        save_catalogue(catalogue, cat_path)
+        logger.info("  Saved catalogue: %s", cat_path)
 
         stats.total_papers = len(catalogue)
         stats.with_doi = sum(1 for r in catalogue if r.doi)
+        stats.local_pdfs = sum(1 for r in catalogue if r.local_pdf_path)
 
-        # Apply limit
-        records = catalogue[: self.limit] if self.limit else catalogue
+        # Apply limit to NER/remote papers only; local PDFs always process
+        local_pdf_records = [r for r in catalogue if r.local_pdf_path]
+        remote_records = [r for r in catalogue if not r.local_pdf_path]
+        if self.limit is not None:
+            remote_records = remote_records[: self.limit]
+        records = remote_records + local_pdf_records
 
         # Collect categories from NER JSONs (for OWL stub)
         if self.categories is None:
@@ -170,7 +200,7 @@ class DAQPipeline:
         stats.with_repo_preprint = sum(1 for r in records if r.repository_pdf_url)
         stats.downloadable = sum(
             1 for r in records
-            if r.pdf_url or r.repository_pdf_url
+            if r.pdf_url or r.repository_pdf_url or r.local_pdf_path
         )
 
         # Save enriched catalogue
@@ -197,6 +227,7 @@ class DAQPipeline:
             downloaded=downloaded,
             output_dir=kgb_dir,
             categories=self.categories,
+            ontology_path=Path(self.ontology_path) if self.ontology_path else None,
         )
         logger.info("  Docs dir  : %s", result["docs_dir"])
         logger.info("  Manifest  : %s", result["manifest"])
