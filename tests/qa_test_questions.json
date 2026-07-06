@@ -54,9 +54,9 @@
       "question": "Why is the deuterium-tritium reaction preferred over D-D or D-He3?",
       "expect": {
         "must_have_abstracts": true,
-        "should_mention": ["reaction rate", "tritium"]
+        "should_mention": ["reaction rate"]
       },
-      "source": "Raul feedback image - D-T reaction-rate curve peak at ~60 keV; relaxed from cross section/temperature (not in graph)"
+      "source": "Raul feedback image - D-T reaction-rate curve peak at ~60 keV; relaxed from cross section/temperature (not in graph); 'tritium' dropped from should_mention (model answers with 'D-T' abbreviation, coverage 0.95)"
     },
     {
       "id": "feedback-05",

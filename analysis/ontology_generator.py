@@ -58,6 +58,98 @@ def _safe_local(name: str) -> str:
     return safe
 
 
+# ── Typed-IE relation taxonomy ───────────────────────────────────────────────
+# The 8 relations produced by analysis/typed_relation_ie.py.
+# Tuple: (local_name, neo4j_type, label, comment, domain_category, range_category)
+# domain/range_category are NER category names (or None → top-level Entity).
+
+_TYPED_IE_RELATIONS: list[tuple] = [
+    (
+        "uses", "USES", "uses",
+        "Subject employs the object as a tool, method, or instrument "
+        "in a fusion experiment or simulation.",
+        None, None,
+    ),
+    (
+        "achieves", "ACHIEVES", "achieves",
+        "Subject attains the object as a measurable result or performance metric.",
+        None, None,
+    ),
+    (
+        "contains", "CONTAINS", "contains",
+        "Subject physically or conceptually contains the object "
+        "(e.g. a tokamak contains plasma).",
+        None, None,
+    ),
+    (
+        "requires", "REQUIRES", "requires",
+        "Subject depends on the object as a prerequisite condition or resource.",
+        None, None,
+    ),
+    (
+        "produces", "PRODUCES", "produces",
+        "Subject generates or emits the object as an output "
+        "(e.g. D-T reaction produces neutrons).",
+        None, None,
+    ),
+    (
+        "improves", "IMPROVES", "improves",
+        "Subject enhances the performance or quality of the object.",
+        None, None,
+    ),
+    (
+        "comparesTo", "COMPARES_TO", "compares to",
+        "Subject is scientifically compared against the object. Symmetric.",
+        None, None,
+    ),
+    (
+        "isTypeOf", "IS_TYPE_OF", "is type of",
+        "Subject is a specific instance or sub-type of the object "
+        "(e.g. ITER is type of Tokamak).",
+        None, None,
+    ),
+]
+
+
+def _add_typed_ie_relations(
+    g: Graph,
+    cat_uris: dict[str, URIRef],
+    entity_cls: URIRef,
+) -> None:
+    """Declare the 8 typed-IE ObjectProperties in the ontology graph."""
+    # Annotation property — records the Neo4j edge type string
+    neo4j_type_prop = FUSIONKG["neo4jRelType"]
+    g.add((neo4j_type_prop, RDF.type, OWL.AnnotationProperty))
+    g.add((neo4j_type_prop, RDFS.label, Literal("Neo4j relationship type")))
+    g.add((neo4j_type_prop, RDFS.comment,
+           Literal("The exact Neo4j relationship type string used in Cypher queries.")))
+
+    # Super-property groups all typed-IE relations
+    typed_prop = FUSIONKG["typedRelation"]
+    g.add((typed_prop, RDF.type, OWL.ObjectProperty))
+    g.add((typed_prop, RDFS.label, Literal("typed relation")))
+    g.add((typed_prop, RDFS.comment, Literal(
+        "Parent property for all semantically typed relations extracted by "
+        "analysis/typed_relation_ie.py from paper abstract context."
+    )))
+    g.add((typed_prop, RDFS.domain, entity_cls))
+    g.add((typed_prop, RDFS.range, entity_cls))
+
+    for local_name, neo4j_type, label, comment, domain_cat, range_cat in _TYPED_IE_RELATIONS:
+        prop_uri = FUSIONKG[local_name]
+        g.add((prop_uri, RDF.type, OWL.ObjectProperty))
+        g.add((prop_uri, RDFS.subPropertyOf, typed_prop))
+        g.add((prop_uri, RDFS.label, Literal(label)))
+        g.add((prop_uri, RDFS.comment, Literal(comment)))
+        g.add((prop_uri, FUSIONKG["neo4jRelType"], Literal(neo4j_type)))
+        domain_uri = cat_uris.get(domain_cat, entity_cls) if domain_cat else entity_cls
+        range_uri  = cat_uris.get(range_cat,  entity_cls) if range_cat  else entity_cls
+        g.add((prop_uri, RDFS.domain, domain_uri))
+        g.add((prop_uri, RDFS.range, range_uri))
+        if neo4j_type == "COMPARES_TO":
+            g.add((prop_uri, RDF.type, OWL.SymmetricProperty))
+
+
 # ── Neo4j data fetching ──────────────────────────────────────────────────────
 
 def _fetch_co_occurrence_categories(driver, min_weight: int = 5):
@@ -241,6 +333,10 @@ def build_ontology(
                            Literal(mentions, datatype=XSD.integer)))
                 n_individuals += 1
         print(f"  {n_individuals} named individuals")
+
+    # ── Typed-IE ObjectProperties ─────────────────────────────────
+    print("  Adding typed-IE relation ObjectProperties …")
+    _add_typed_ie_relations(g, cat_uris, entity_cls)
 
     # ── Annotation properties ─────────────────────────────────────
     mc_prop = FUSIONKG["mentionCount"]

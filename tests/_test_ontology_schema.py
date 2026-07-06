@@ -1,0 +1,2 @@
+from analysis.llm_graph_qa import _load_ontology_typed_relations
+print(_load_ontology_typed_relations())

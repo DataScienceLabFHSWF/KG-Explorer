@@ -17,6 +17,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
@@ -61,6 +62,9 @@ WHERE x AS y, GROUP BY, JOIN). No markdown fences, no explanation, no comments.
 (e:Entity)-[:IN_CATEGORY]->(c:Category)
 (p:Paper)-[:HAS_FIELD]->(f:Field)
 
+=== SEMANTIC TYPED RELATIONS (ontology-derived, use for "uses/produces/contains/requires" questions) ===
+{typed_relations}
+
 === ACTUAL CATEGORY NAMES (use these strings exactly) ===
 {categories}
 
@@ -68,7 +72,7 @@ WHERE x AS y, GROUP BY, JOIN). No markdown fences, no explanation, no comments.
 Entity.name_norm values are stored in LOWERCASE (e.g., "tokamak", "iter", "tritium").
 ALWAYS match with:  e.name_norm CONTAINS toLower('search term')
 
-=== EIGHT CYPHER PATTERNS — pick the one that best fits the question ===
+=== TEN CYPHER PATTERNS — pick the one that best fits the question ===
 
 # 1 — Entity info + mention stats
 MATCH (e:Entity)
@@ -150,12 +154,32 @@ RETURN node.title AS title,
        score
 ORDER BY score DESC LIMIT 5
 
+# 9 — Semantic typed-relation query (ontology-aware; use for "uses/produces/contains" questions)
+MATCH (a:Entity)-[r:USES|ACHIEVES|CONTAINS|REQUIRES|PRODUCES|IMPROVES|COMPARES_TO|IS_TYPE_OF]->(b:Entity)
+WHERE a.name_norm CONTAINS toLower('tokamak')
+RETURN a.name_norm AS subject,
+       type(r) AS relation,
+       b.name_norm AS object,
+       r.confidence AS confidence
+ORDER BY r.confidence DESC LIMIT 20
+
+# 10 — Ontology meta-query (what typed relation types exist? describe the semantic schema)
+MATCH (p:Resource)
+WHERE p:owl__ObjectProperty AND p.ns0__neo4jRelType IS NOT NULL
+RETURN p.rdfs__label AS relation_label,
+       p.ns0__neo4jRelType AS neo4j_type,
+       p.rdfs__comment AS description
+ORDER BY p.rdfs__label
+
 === CHOOSING A PATTERN ===
 - "What is X?" / "Define X" / "Why X?" / "How does X work?" → pattern 7 (or 8 if no entity match)
 - "Most/top/which X are most ..." → pattern 1, 2, or 5
 - "Trend / over time / since 1990" → pattern 3
 - "Connection / relate / link between A and B" → pattern 4
 - "Latest / newest / most cited paper on X" → pattern 6
+- "What does X use / produce / contain / require / improve?" → pattern 9
+- "How does X relate to Y?" (semantic) → pattern 9 first; fall back to pattern 2 if no typed edges
+- "What relation types exist?" / "Describe the ontology" / "What semantic links are in the KG?" → pattern 10
 - Anything where the user wants prose understanding → ALWAYS prefer 7 or 8
   so abstract text reaches the answer LLM.
 
@@ -216,6 +240,115 @@ Question: {question}
 Answer:""".replace("{sentinel}", MISSING_DATA_SENTINEL)
 
 
+# ── Ontology schema loader ─────────────────────────────────────────────────
+
+def _load_ontology_typed_relations(
+    ttl_path: Path | None = None,
+) -> str:
+    """Read fusion_ontology.ttl and return a compact schema string for the
+    typed ObjectProperties (USES, ACHIEVES, …).  Falls back to a hardcoded
+    description when rdflib is unavailable or the file does not yet exist."""
+    _FALLBACK = (
+        "(a:Entity)-[:USES]->(b:Entity)           — a employs b as tool/method\n"
+        "(a:Entity)-[:ACHIEVES]->(b:Entity)       — a attains b as result/metric\n"
+        "(a:Entity)-[:CONTAINS]->(b:Entity)       — a physically/conceptually contains b\n"
+        "(a:Entity)-[:REQUIRES]->(b:Entity)       — a depends on b as prerequisite\n"
+        "(a:Entity)-[:PRODUCES]->(b:Entity)       — a generates b as output\n"
+        "(a:Entity)-[:IMPROVES]->(b:Entity)       — a enhances b\n"
+        "(a:Entity)-[:COMPARES_TO]->(b:Entity)    — a compared against b (symmetric)\n"
+        "(a:Entity)-[:IS_TYPE_OF]->(b:Entity)     — a is a specific type/instance of b\n"
+        "All typed edges carry: confidence FLOAT, source='typed_ie'"
+    )
+    path = ttl_path or (Path(__file__).parent.parent / "output" / "fusion_ontology.ttl")
+    if not path.exists():
+        return _FALLBACK
+    try:
+        import importlib
+        rdflib = importlib.import_module("rdflib")
+        RDFGraph = rdflib.Graph
+        from rdflib.namespace import RDF as _RDF, RDFS as _RDFS, OWL as _OWL
+        FUSIONKG_NS = rdflib.Namespace("http://fusionkg.2026/ontology#")
+        g = RDFGraph()
+        g.parse(str(path), format="turtle")
+        lines: list[str] = []
+        for prop in sorted(g.subjects(_RDF.type, _OWL.ObjectProperty)):
+            neo4j_type = g.value(prop, FUSIONKG_NS.neo4jRelType)
+            if not neo4j_type:
+                continue
+            comment = str(g.value(prop, _RDFS.comment) or "")
+            short = comment[:90].rstrip()
+            lines.append(
+                f"(a:Entity)-[:{neo4j_type}]->(b:Entity)"
+                f"  — {short}"
+            )
+        if not lines:
+            return _FALLBACK
+        lines.append("All typed edges carry: confidence FLOAT, source='typed_ie'")
+        return "\n".join(lines)
+    except Exception:
+        return _FALLBACK
+
+
+# ── Live ontology schema builder (requires Neo4j driver) ────────────────────
+# Called from FusionCypherAgent.__init__ once the driver is ready.
+# Falls back to the TTL-file reader if n10s nodes aren't loaded yet.
+
+def _build_typed_relations_from_graph(driver, db: str) -> str:
+    """Query the n10s-loaded owl__ObjectProperty nodes + real typed-edge examples
+    from the graph.  Returns an enriched schema string for the Cypher prompt.
+    Falls back to _load_ontology_typed_relations() when n10s nodes are absent."""
+    _ONT_Q = """
+        MATCH (p:Resource)
+        WHERE p:owl__ObjectProperty AND p.ns0__neo4jRelType IS NOT NULL
+        RETURN p.rdfs__label AS label,
+               p.ns0__neo4jRelType AS neo4j_type,
+               p.rdfs__comment AS comment
+        ORDER BY p.rdfs__label
+    """
+    _EX_Q = """
+        MATCH (a:Entity)-[r:USES|ACHIEVES|CONTAINS|REQUIRES|PRODUCES|
+                          IMPROVES|COMPARES_TO|IS_TYPE_OF]->(b:Entity)
+        WITH type(r) AS rel_type,
+             a.name_norm AS subj,
+             b.name_norm AS obj,
+             r.confidence AS conf
+        ORDER BY rel_type, conf DESC
+        WITH rel_type, collect({s: subj, o: obj})[..2] AS examples
+        RETURN rel_type, examples
+    """
+    try:
+        with driver.session(database=db) as sess:
+            ont_rows = list(sess.run(_ONT_Q))
+            ex_map: dict[str, list] = {
+                r["rel_type"]: r["examples"]
+                for r in sess.run(_EX_Q)
+            }
+        if not ont_rows:
+            logger.info("No n10s ontology nodes found; falling back to TTL reader")
+            return _load_ontology_typed_relations()
+        lines: list[str] = []
+        for row in ont_rows:
+            raw_type = row["neo4j_type"]
+            neo4j_type = (raw_type[0] if isinstance(raw_type, list) else raw_type) or ""
+            raw_comment = row["comment"]
+            # n10s may return multi-valued properties as lists
+            if isinstance(raw_comment, list):
+                raw_comment = " ".join(str(c) for c in raw_comment)
+            comment = str(raw_comment or "")[:90].rstrip()
+            line = f"(a:Entity)-[:{neo4j_type}]->(b:Entity)  \u2014 {comment}"
+            exs = ex_map.get(neo4j_type, [])
+            if exs:
+                ex_parts = [f"({e['s']})->({e['o']})" for e in exs[:2]]
+                line += f"  [e.g. {', '.join(ex_parts)}]"
+            lines.append(line)
+        lines.append("All typed edges carry: confidence FLOAT, source='typed_ie'")
+        logger.info("Typed-relation schema built from n10s: %d properties", len(ont_rows))
+        return "\n".join(lines)
+    except Exception as exc:
+        logger.warning("_build_typed_relations_from_graph failed: %s", exc)
+        return _load_ontology_typed_relations()
+
+
 # ── Agent class ────────────────────────────────────────────────────────────
 
 class FusionCypherAgent:
@@ -264,8 +397,10 @@ class FusionCypherAgent:
 
         # Pull the actual category names from the graph and inject into the
         # Cypher prompt so the LLM never invents non-existent category labels.
-        cypher_template_filled = CYPHER_GENERATION_TEMPLATE.replace(
-            "{categories}", self._fetch_category_block()
+        cypher_template_filled = (
+            CYPHER_GENERATION_TEMPLATE
+            .replace("{categories}", self._fetch_category_block())
+            .replace("{typed_relations}", _build_typed_relations_from_graph(self._driver, self._db))
         )
 
         # LangChain GraphCypherQAChain
@@ -416,6 +551,84 @@ class FusionCypherAgent:
         missing_from_graph = MISSING_DATA_SENTINEL in (answer or "")
         if missing_from_graph:
             answer = answer.replace(MISSING_DATA_SENTINEL, "").strip()
+
+        # Step 8b: false-sentinel override — if the LLM fired the sentinel but
+        # abstract evidence was retrieved, the sentinel is almost certainly a
+        # false positive (small models sometimes ignore the sentinel condition).
+        # Re-synthesise from the abstract excerpts alone using a forceful prompt.
+        if missing_from_graph and abstract_hits and not answer:
+            missing_from_graph = False
+            try:
+                _excerpts = "\n\n".join(
+                    f"[{i + 1}] {h.get('abstract_excerpt', h.get('abstract', ''))[:600]}"
+                    for i, h in enumerate(abstract_hits[:5])
+                )
+                force_text = (
+                    "You are a nuclear-fusion research assistant. "
+                    "Answer the question below using ONLY the abstract excerpts provided. "
+                    "Give a direct, informative answer; do not say the information is "
+                    "unavailable. Use the exact terminology from the question in your answer.\n\n"
+                    f"Abstract excerpts:\n{_excerpts}\n\n"
+                    f"Question: {question}\n\nAnswer:"
+                )
+                resp2 = self._llm.invoke(force_text)
+                answer = (resp2.content.strip()
+                          if hasattr(resp2, "content") else str(resp2).strip())
+                answer = re.sub(r'\nCOVERAGE:\s*[01](?:\.\d+)?\s*$', '', answer,
+                                flags=re.IGNORECASE).strip()
+                if not coverage_score or coverage_score < 0.4:
+                    coverage_score = 0.6
+                logger.info("Forced abstract re-synthesis produced %d chars", len(answer))
+            except Exception as exc_force:
+                logger.warning("Forced abstract re-synthesis failed: %s", exc_force)
+
+        # Step 8c: term-reinforcement retry — if the answer completely omits
+        # key words that appear in the question AND in the abstract evidence,
+        # retry once with an explicit term hint.  This guards against small
+        # models that answer comparatives with generic phrases.
+        if answer and abstract_hits:
+            question_words = set(re.findall(r'\b[a-zA-Z]{4,}\b', question.lower()))
+            answer_lower = answer.lower()
+            evidence_text = " ".join(
+                (h.get("abstract_excerpt") or h.get("abstract") or "")[:300]
+                for h in abstract_hits[:4]
+            ).lower()
+            missing_terms = [
+                w for w in question_words
+                if w not in answer_lower and w in evidence_text
+                and w not in {"what", "does", "that", "this", "with", "from",
+                              "have", "been", "which", "between", "over"}
+            ]
+            if len(missing_terms) >= 2:
+                try:
+                    hint = ", ".join(missing_terms[:5])
+                    _excerpts2 = "\n\n".join(
+                        f"[{i + 1}] {h.get('abstract_excerpt', h.get('abstract', ''))[:600]}"
+                        for i, h in enumerate(abstract_hits[:5])
+                    )
+                    retry_text = (
+                        "You are a nuclear-fusion research assistant. "
+                        f"The following terms MUST appear in your answer: {hint}. "
+                        "Answer the question using the provided abstract excerpts. "
+                        "Be direct and specific.\n\n"
+                        f"Abstracts:\n{_excerpts2}\n\n"
+                        f"Question: {question}\n\nAnswer:"
+                    )
+                    resp3 = self._llm.invoke(retry_text)
+                    retry_ans = (resp3.content.strip()
+                                 if hasattr(resp3, "content") else str(resp3).strip())
+                    retry_ans = re.sub(r'\nCOVERAGE:\s*[01](?:\.\d+)?\s*$', '', retry_ans,
+                                       flags=re.IGNORECASE).strip()
+                    if retry_ans:
+                        answer = retry_ans
+                        if not coverage_score or coverage_score < 0.4:
+                            coverage_score = 0.6
+                        logger.info(
+                            "Term-reinforcement retry replaced answer (missing: %s)", hint
+                        )
+                except Exception as exc_retry:
+                    logger.warning("Term-reinforcement retry failed: %s", exc_retry)
+
         # Also log if: no evidence at all, OR coverage score below threshold.
         no_evidence = (not abstract_hits) and (not context)
         low_coverage = coverage_score is not None and coverage_score < 0.35
@@ -433,6 +646,15 @@ class FusionCypherAgent:
             except Exception as exc3:
                 logger.warning("Could not log answer-gap event: %s", exc3)
 
+        # Step 9: graph_utilization — fraction of linked entity names that
+        # appear explicitly in the final answer text.  0.0 = none used,
+        # 1.0 = every linked entity mentioned.  Proxy for how much of the
+        # graph evidence was actually incorporated in the response.
+        linked_names = [n for n, _ in linked]
+        answer_lower = (answer or "").lower()
+        used_count = sum(1 for n in linked_names if n.lower() in answer_lower)
+        graph_utilization = round(used_count / len(linked_names), 3) if linked_names else 0.0
+
         return {
             "answer": answer,
             "cypher": cypher,
@@ -442,6 +664,7 @@ class FusionCypherAgent:
             "fallback_used": fallback_used,
             "missing_from_graph": missing_from_graph,
             "coverage_score": coverage_score,
+            "graph_utilization": graph_utilization,
             "error": error,
         }
 

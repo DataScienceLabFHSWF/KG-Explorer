@@ -7,13 +7,19 @@ services:
       - "7687:7687"   # Bolt
     environment:
       NEO4J_AUTH: neo4j/fusion2026
-      NEO4J_PLUGINS: '["graph-data-science", "apoc"]'
+      NEO4J_PLUGINS: '["graph-data-science", "apoc", "n10s"]'
       NEO4J_server_memory_heap_initial__size: 512m
       NEO4J_server_memory_heap_max__size: 1G
       NEO4J_server_memory_pagecache_size: 512m
+      # Allow n10s (neosemantics) and APOC procedures to run unrestricted
+      NEO4J_dbms_security_procedures_unrestricted: "n10s.*,apoc.*,gds.*"
+      # Allow file:// imports from the mapped import directory
+      NEO4J_dbms_security_allow__csv__import__from__file__urls: "true"
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
+      # Mount project output/ as the Neo4j import dir so n10s can read the TTL
+      - ./output:/var/lib/neo4j/import
     healthcheck:
       test: ["CMD", "neo4j", "status"]
       interval: 10s

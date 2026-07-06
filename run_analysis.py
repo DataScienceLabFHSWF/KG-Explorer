@@ -43,6 +43,7 @@ MODULES = {
     "ontology":    "analysis.ontology_generator",
     "communities": "analysis.community_scoped",
     "embeddings":  "analysis.graph_embeddings",
+    "grapheval":   "analysis.graph_evaluation",
 }
 
 
