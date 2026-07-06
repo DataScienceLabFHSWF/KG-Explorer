@@ -1,0 +1,2979 @@
+@prefix bfo: <http://purl.obolibrary.org/obo/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix fusionkb: <http://fusionkg.2026/kb#> .
+@prefix fusionkg: <http://fusionkg.2026/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+fusionkb:C_11th_european_tokamak_programme_workshop a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "11th european tokamak programme workshop" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "11th european tokamak programme workshop"@en .
+
+fusionkb:C_1ds_ods_steel a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "1ds ods steel" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "1ds ods steel"@en .
+
+fusionkb:C_2010 a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "2010" ;
+    fusionkg:mentionCount 29 ;
+    skos:prefLabel "2010"@en .
+
+fusionkb:C_2013 a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "2013" ;
+    fusionkg:mentionCount 20 ;
+    skos:prefLabel "2013"@en .
+
+fusionkb:C_2014 a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "2014" ;
+    fusionkg:mentionCount 20 ;
+    skos:prefLabel "2014"@en .
+
+fusionkb:C_2015 a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "2015" ;
+    fusionkg:mentionCount 30 ;
+    skos:prefLabel "2015"@en .
+
+fusionkb:C_2018 a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "2018" ;
+    fusionkg:mentionCount 20 ;
+    skos:prefLabel "2018"@en .
+
+fusionkb:C_2020 a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "2020" ;
+    fusionkg:mentionCount 20 ;
+    skos:prefLabel "2020"@en .
+
+fusionkb:C_2021 a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "2021" ;
+    fusionkg:mentionCount 24 ;
+    skos:prefLabel "2021"@en .
+
+fusionkb:C_3rd_iaea_technical_meeting_arles_greifswald a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "3rd iaea technical meeting arles/greifswald" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "3rd iaea technical meeting arles/greifswald"@en .
+
+fusionkb:C_3rd_iaea_tm_arles_greifswald a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "3rd iaea tm arles/greifswald" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "3rd iaea tm arles/greifswald"@en .
+
+fusionkb:accident_conditions a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "accident conditions" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "accident conditions"@en .
+
+fusionkb:al_xii a fusionkg:Ion,
+        owl:NamedIndividual ;
+    rdfs:label "al xii" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "al xii"@en .
+
+fusionkb:al_xiii a fusionkg:Ion,
+        owl:NamedIndividual ;
+    rdfs:label "al xiii" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "al xiii"@en .
+
+fusionkb:alloy a fusionkg:Nuclear_FusionSystemComponent,
+        owl:NamedIndividual ;
+    rdfs:label "alloy" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "alloy"@en .
+
+fusionkb:alumina_base a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "alumina base" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "alumina base"@en .
+
+fusionkb:antenna a fusionkg:Detection_and_Monitoring_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "antenna" ;
+    fusionkg:mentionCount 104 ;
+    skos:prefLabel "antenna"@en .
+
+fusionkb:aspect_ratio a fusionkg:Nuclear_Fusion_System_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "aspect ratio" ;
+    fusionkg:mentionCount 181 ;
+    skos:prefLabel "aspect ratio"@en .
+
+fusionkb:astrophysical_jets a fusionkg:Astrophysical_setting,
+        owl:NamedIndividual ;
+    rdfs:label "astrophysical jets" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "astrophysical jets"@en .
+
+fusionkb:atomic_data a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "atomic data" ;
+    fusionkg:mentionCount 5 ;
+    skos:prefLabel "atomic data"@en .
+
+fusionkb:ayman_research_project a fusionkg:Project,
+        owl:NamedIndividual ;
+    rdfs:label "ayman research project" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ayman research project"@en .
+
+fusionkb:beam a fusionkg:Nuclear_FusionSystemComponent,
+        owl:NamedIndividual ;
+    rdfs:label "beam" ;
+    fusionkg:mentionCount 67 ;
+    skos:prefLabel "beam"@en .
+
+fusionkb:beta a fusionkg:Software_and_simulation,
+        owl:NamedIndividual ;
+    rdfs:label "beta" ;
+    fusionkg:mentionCount 227 ;
+    skos:prefLabel "beta"@en .
+
+fusionkb:bootstrap_current a fusionkg:Control_Systems,
+        fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "bootstrap current" ;
+    fusionkg:mentionCount 211 ;
+    skos:prefLabel "bootstrap current"@en .
+
+fusionkb:boozer a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "boozer" ;
+    fusionkg:mentionCount 9 ;
+    skos:prefLabel "boozer"@en .
+
+fusionkb:boozer_coordinates a fusionkg:Coordinate_System,
+        owl:NamedIndividual ;
+    rdfs:label "boozer coordinates" ;
+    fusionkg:mentionCount 9 ;
+    skos:prefLabel "boozer coordinates"@en .
+
+fusionkb:boundary_conditions a fusionkg:Boundary_Condition,
+        owl:NamedIndividual ;
+    rdfs:label "boundary conditions" ;
+    fusionkg:mentionCount 21 ;
+    skos:prefLabel "boundary conditions"@en .
+
+fusionkb:brown_dwarfs a fusionkg:Celestial_Body,
+        owl:NamedIndividual ;
+    rdfs:label "brown dwarfs" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "brown dwarfs"@en .
+
+fusionkb:burn a fusionkg:Plasma_Event,
+        owl:NamedIndividual ;
+    rdfs:label "burn" ;
+    fusionkg:mentionCount 33 ;
+    skos:prefLabel "burn"@en .
+
+fusionkb:calculations a fusionkg:Software_and_simulation,
+        owl:NamedIndividual ;
+    rdfs:label "calculations" ;
+    fusionkg:mentionCount 47 ;
+    skos:prefLabel "calculations"@en .
+
+fusionkb:capsule a fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "capsule" ;
+    fusionkg:mentionCount 214 ;
+    skos:prefLabel "capsule"@en .
+
+fusionkb:carbon a fusionkg:Chemical_Element_or_Compound,
+        owl:NamedIndividual ;
+    rdfs:label "carbon" ;
+    fusionkg:mentionCount 413 ;
+    skos:prefLabel "carbon"@en .
+
+fusionkb:cbet a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "cbet" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "cbet"@en .
+
+fusionkb:ceramic_substrates a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "ceramic substrates" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ceramic substrates"@en .
+
+fusionkb:chemical_propulsion a fusionkg:Propulsion_Method,
+        owl:NamedIndividual ;
+    rdfs:label "chemical propulsion" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "chemical propulsion"@en .
+
+fusionkb:china a fusionkg:Country_and_location,
+        owl:NamedIndividual ;
+    rdfs:label "china" ;
+    fusionkg:mentionCount 72 ;
+    skos:prefLabel "china"@en .
+
+fusionkb:circular_cylindrical_limit a fusionkg:Geometry,
+        owl:NamedIndividual ;
+    rdfs:label "circular cylindrical limit" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "circular cylindrical limit"@en .
+
+fusionkb:confinement a fusionkg:Concept,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "confinement" ;
+    fusionkg:mentionCount 820 ;
+    skos:prefLabel "confinement"@en .
+
+fusionkb:core a fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "core" ;
+    fusionkg:mentionCount 406 ;
+    skos:prefLabel "core"@en .
+
+fusionkb:ctf a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "ctf" ;
+    fusionkg:mentionCount 9 ;
+    skos:prefLabel "ctf"@en .
+
+fusionkb:current_drive a fusionkg:Control_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "current drive" ;
+    fusionkg:mentionCount 122 ;
+    skos:prefLabel "current drive"@en .
+
+fusionkb:cylindrical_shell a fusionkg:Geometry,
+        owl:NamedIndividual ;
+    rdfs:label "cylindrical shell" ;
+    fusionkg:mentionCount 3 ;
+    skos:prefLabel "cylindrical shell"@en .
+
+fusionkb:d_plasma a fusionkg:Plasma_type,
+        owl:NamedIndividual ;
+    rdfs:label "d plasma" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "d plasma"@en .
+
+fusionkb:d_t_fusion_reactors a fusionkg:Nuclear_Fusion_Reactor_Type,
+        owl:NamedIndividual ;
+    rdfs:label "d-t fusion reactors" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "d-t fusion reactors"@en .
+
+fusionkb:d_t_plasma a fusionkg:Plasma_type,
+        owl:NamedIndividual ;
+    rdfs:label "d-t plasma" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "d-t plasma"@en .
+
+fusionkb:data a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "data" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "data"@en .
+
+fusionkb:data_base a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "data base" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "data base"@en .
+
+fusionkb:database a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "database" ;
+    fusionkg:mentionCount 39 ;
+    skos:prefLabel "database"@en .
+
+fusionkb:density a fusionkg:Physics_Entity,
+        fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "density" ;
+    fusionkg:mentionCount 853 ;
+    skos:prefLabel "density"@en .
+
+fusionkb:detector a fusionkg:Detection_and_Monitoring_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "detector" ;
+    fusionkg:mentionCount 80 ;
+    skos:prefLabel "detector"@en .
+
+fusionkb:detectors a fusionkg:Detection_and_Monitoring_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "detectors" ;
+    fusionkg:mentionCount 55 ;
+    skos:prefLabel "detectors"@en .
+
+fusionkb:deuterated_metalalloy a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "deuterated metalalloy" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "deuterated metalalloy"@en .
+
+fusionkb:deuterium a fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Particle,
+        fusionkg:chemical_element_or_compound,
+        owl:NamedIndividual ;
+    rdfs:label "deuterium" ;
+    fusionkg:mentionCount 1248 ;
+    skos:prefLabel "deuterium"@en .
+
+fusionkb:deuteron a fusionkg:chemical_element_or_compound,
+        owl:NamedIndividual ;
+    rdfs:label "deuteron" ;
+    fusionkg:mentionCount 64 ;
+    skos:prefLabel "deuteron"@en .
+
+fusionkb:diagnostics a fusionkg:Detection_and_Monitoring_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "diagnostics" ;
+    fusionkg:mentionCount 108 ;
+    skos:prefLabel "diagnostics"@en .
+
+fusionkb:diamond a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "diamond" ;
+    fusionkg:mentionCount 29 ;
+    skos:prefLabel "diamond"@en .
+
+fusionkb:diii_d a fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        owl:NamedIndividual ;
+    rdfs:label "diii-d" ;
+    fusionkg:mentionCount 251 ;
+    skos:prefLabel "diii-d"@en .
+
+fusionkb:discharge a fusionkg:Plasma_event,
+        fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "discharge" ;
+    fusionkg:mentionCount 131 ;
+    skos:prefLabel "discharge"@en .
+
+fusionkb:disruption a fusionkg:Plasma_event,
+        owl:NamedIndividual ;
+    rdfs:label "disruption" ;
+    fusionkg:mentionCount 209 ;
+    skos:prefLabel "disruption"@en .
+
+fusionkb:disruptions a fusionkg:Plasma_event,
+        owl:NamedIndividual ;
+    rdfs:label "disruptions" ;
+    fusionkg:mentionCount 141 ;
+    skos:prefLabel "disruptions"@en .
+
+fusionkb:divertor a fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "divertor" ;
+    fusionkg:mentionCount 758 ;
+    skos:prefLabel "divertor"@en .
+
+fusionkb:dte2 a fusionkg:Experimental_Campaign,
+        owl:NamedIndividual ;
+    rdfs:label "dte2" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "dte2"@en .
+
+fusionkb:earth a fusionkg:Location,
+        owl:NamedIndividual ;
+    rdfs:label "earth" ;
+    fusionkg:mentionCount 8 ;
+    skos:prefLabel "earth"@en .
+
+fusionkb:east a fusionkg:Facility_or_Institution,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        owl:NamedIndividual ;
+    rdfs:label "east" ;
+    fusionkg:mentionCount 246 ;
+    skos:prefLabel "east"@en .
+
+fusionkb:ec_12 a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "ec-12" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ec-12"@en .
+
+fusionkb:eccd a fusionkg:Acronym,
+        fusionkg:Control_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "eccd" ;
+    fusionkg:mentionCount 71 ;
+    skos:prefLabel "eccd"@en .
+
+fusionkb:ech a fusionkg:Heating_Method,
+        owl:NamedIndividual ;
+    rdfs:label "ech" ;
+    fusionkg:mentionCount 54 ;
+    skos:prefLabel "ech"@en .
+
+fusionkb:ecrh a fusionkg:Heating_Method,
+        fusionkg:Heating_and_Current_Drive,
+        fusionkg:Nuclear_Fusion_Technique,
+        owl:NamedIndividual ;
+    rdfs:label "ecrh" ;
+    fusionkg:mentionCount 193 ;
+    skos:prefLabel "ecrh"@en .
+
+fusionkb:edge a fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "edge" ;
+    fusionkg:mentionCount 625 ;
+    skos:prefLabel "edge"@en .
+
+fusionkb:electric_field a fusionkg:Field_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "electric field" ;
+    fusionkg:mentionCount 261 ;
+    skos:prefLabel "electric field"@en .
+
+fusionkb:electron a fusionkg:Particle,
+        fusionkg:Physics_Entity,
+        owl:NamedIndividual ;
+    rdfs:label "electron" ;
+    fusionkg:mentionCount 2007 ;
+    skos:prefLabel "electron"@en .
+
+fusionkb:electron_cyclotron_resonance_heating a fusionkg:Control_Systems,
+        fusionkg:Heating_Method,
+        owl:NamedIndividual ;
+    rdfs:label "electron cyclotron resonance heating" ;
+    fusionkg:mentionCount 101 ;
+    skos:prefLabel "electron cyclotron resonance heating"@en .
+
+fusionkb:electron_temperature a fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "electron temperature" ;
+    fusionkg:mentionCount 492 ;
+    skos:prefLabel "electron temperature"@en .
+
+fusionkb:electrons a fusionkg:Particle,
+        fusionkg:Physics_Entity,
+        owl:NamedIndividual ;
+    rdfs:label "electrons" ;
+    fusionkg:mentionCount 564 ;
+    skos:prefLabel "electrons"@en .
+
+fusionkb:elemental_activation_foils a fusionkg:Detection_and_Monitoring_systems,
+        owl:NamedIndividual ;
+    rdfs:label "elemental activation foils" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "elemental activation foils"@en .
+
+fusionkb:elliptic_integrals a fusionkg:Mathematical_Concept,
+        owl:NamedIndividual ;
+    rdfs:label "elliptic integrals" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "elliptic integrals"@en .
+
+fusionkb:emission a fusionkg:Physical_Process,
+        owl:NamedIndividual ;
+    rdfs:label "emission" ;
+    fusionkg:mentionCount 467 ;
+    skos:prefLabel "emission"@en .
+
+fusionkb:energy a fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_property,
+        fusionkg:Research_field,
+        owl:NamedIndividual ;
+    rdfs:label "energy" ;
+    fusionkg:mentionCount 529 ;
+    skos:prefLabel "energy"@en .
+
+fusionkb:entropy a fusionkg:Software_and_simulation,
+        owl:NamedIndividual ;
+    rdfs:label "entropy" ;
+    fusionkg:mentionCount 50 ;
+    skos:prefLabel "entropy"@en .
+
+fusionkb:equator a fusionkg:Location,
+        owl:NamedIndividual ;
+    rdfs:label "equator" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "equator"@en .
+
+fusionkb:equilibrium a fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "equilibrium" ;
+    fusionkg:mentionCount 161 ;
+    skos:prefLabel "equilibrium"@en .
+
+fusionkb:ete_experimento_tokamak_esferico_project a fusionkg:Research_Project,
+        owl:NamedIndividual ;
+    rdfs:label "ete experimento tokamak esferico project" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ete experimento tokamak esferico project"@en .
+
+fusionkb:europe a fusionkg:Country_and_location,
+        owl:NamedIndividual ;
+    rdfs:label "europe" ;
+    fusionkg:mentionCount 23 ;
+    skos:prefLabel "europe"@en .
+
+fusionkb:european_fusion_development_agreement a fusionkg:Program,
+        owl:NamedIndividual ;
+    rdfs:label "european fusion development agreement" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "european fusion development agreement"@en .
+
+fusionkb:experiment a fusionkg:Experiment,
+        fusionkg:Research_field,
+        owl:NamedIndividual ;
+    rdfs:label "experiment" ;
+    fusionkg:mentionCount 28 ;
+    skos:prefLabel "experiment"@en .
+
+fusionkb:experimental_data a fusionkg:Database,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "experimental data" ;
+    fusionkg:mentionCount 52 ;
+    skos:prefLabel "experimental data"@en .
+
+fusionkb:experimental_results a fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "experimental results" ;
+    fusionkg:mentionCount 40 ;
+    skos:prefLabel "experimental results"@en .
+
+fusionkb:experiments a fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Research_field,
+        owl:NamedIndividual ;
+    rdfs:label "experiments" ;
+    fusionkg:mentionCount 55 ;
+    skos:prefLabel "experiments"@en .
+
+fusionkb:fec_2002 a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "fec-2002" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "fec-2002"@en .
+
+fusionkb:fluctuations a fusionkg:Plasma_event,
+        owl:NamedIndividual ;
+    rdfs:label "fluctuations" ;
+    fusionkg:mentionCount 161 ;
+    skos:prefLabel "fluctuations"@en .
+
+fusionkb:fnsf a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "fnsf" ;
+    fusionkg:mentionCount 13 ;
+    skos:prefLabel "fnsf"@en .
+
+fusionkb:fortran_90 a fusionkg:Programming_language,
+        owl:NamedIndividual ;
+    rdfs:label "fortran 90" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "fortran 90"@en .
+
+fusionkb:france a fusionkg:Country_and_location,
+        owl:NamedIndividual ;
+    rdfs:label "france" ;
+    fusionkg:mentionCount 29 ;
+    skos:prefLabel "france"@en .
+
+fusionkb:free_boundary_description a fusionkg:Plasma_description,
+        owl:NamedIndividual ;
+    rdfs:label "free boundary description" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "free boundary description"@en .
+
+fusionkb:frequency a fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "frequency" ;
+    fusionkg:mentionCount 520 ;
+    skos:prefLabel "frequency"@en .
+
+fusionkb:fusion a fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Software_and_simulation,
+        fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "fusion" ;
+    fusionkg:mentionCount 154 ;
+    skos:prefLabel "fusion"@en .
+
+fusionkb:fusion_energy a fusionkg:Research_field,
+        owl:NamedIndividual ;
+    rdfs:label "fusion energy" ;
+    fusionkg:mentionCount 76 ;
+    skos:prefLabel "fusion energy"@en .
+
+fusionkb:fusion_power_generation_on_aircraft a fusionkg:Application,
+        owl:NamedIndividual ;
+    rdfs:label "fusion power generation on aircraft" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "fusion power generation on aircraft"@en .
+
+fusionkb:fusion_power_generation_on_main_battle_tanks a fusionkg:Application,
+        owl:NamedIndividual ;
+    rdfs:label "fusion power generation on main battle tanks" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "fusion power generation on main battle tanks"@en .
+
+fusionkb:garching a fusionkg:City,
+        owl:NamedIndividual ;
+    rdfs:label "garching" ;
+    fusionkg:mentionCount 7 ;
+    skos:prefLabel "garching"@en .
+
+fusionkb:garren a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "garren" ;
+    fusionkg:mentionCount 5 ;
+    skos:prefLabel "garren"@en .
+
+fusionkb:gcc a fusionkg:Unit,
+        owl:NamedIndividual ;
+    rdfs:label "gcc" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "gcc"@en .
+
+fusionkb:germany a fusionkg:Country_and_location,
+        owl:NamedIndividual ;
+    rdfs:label "germany" ;
+    fusionkg:mentionCount 36 ;
+    skos:prefLabel "germany"@en .
+
+fusionkb:giant_planet_interiors a fusionkg:Astrophysical_Object,
+        owl:NamedIndividual ;
+    rdfs:label "giant planet interiors" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "giant planet interiors"@en .
+
+fusionkb:greifswald a fusionkg:City,
+        fusionkg:Country_and_location,
+        owl:NamedIndividual ;
+    rdfs:label "greifswald" ;
+    fusionkg:mentionCount 24 ;
+    skos:prefLabel "greifswald"@en .
+
+fusionkb:growth_rate a fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "growth rate" ;
+    fusionkg:mentionCount 120 ;
+    skos:prefLabel "growth rate"@en .
+
+fusionkb:gyrokinetic_simulations a fusionkg:Software_and_simulation,
+        owl:NamedIndividual ;
+    rdfs:label "gyrokinetic simulations" ;
+    fusionkg:mentionCount 67 ;
+    skos:prefLabel "gyrokinetic simulations"@en .
+
+fusionkb:h_mode a fusionkg:Concept,
+        fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "h-mode" ;
+    fusionkg:mentionCount 420 ;
+    skos:prefLabel "h-mode"@en .
+
+fusionkb:hapl_program a fusionkg:Program,
+        owl:NamedIndividual ;
+    rdfs:label "hapl program" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "hapl program"@en .
+
+fusionkb:hard_rays a fusionkg:Radiation,
+        owl:NamedIndividual ;
+    rdfs:label "hard rays" ;
+    fusionkg:mentionCount 3 ;
+    skos:prefLabel "hard rays"@en .
+
+fusionkb:hcn a fusionkg:Chemical_Compound,
+        owl:NamedIndividual ;
+    rdfs:label "hcn" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "hcn"@en .
+
+fusionkb:heating a fusionkg:Control_Systems,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Plasma_dynamic_and_behavior,
+        owl:NamedIndividual ;
+    rdfs:label "heating" ;
+    fusionkg:mentionCount 306 ;
+    skos:prefLabel "heating"@en .
+
+fusionkb:helander a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "helander" ;
+    fusionkg:mentionCount 5 ;
+    skos:prefLabel "helander"@en .
+
+fusionkb:helium a fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Particle,
+        owl:NamedIndividual ;
+    rdfs:label "helium" ;
+    fusionkg:mentionCount 322 ;
+    skos:prefLabel "helium"@en .
+
+fusionkb:hirshman a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "hirshman" ;
+    fusionkg:mentionCount 7 ;
+    skos:prefLabel "hirshman"@en .
+
+fusionkb:hohlraum a fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "hohlraum" ;
+    fusionkg:mentionCount 229 ;
+    skos:prefLabel "hohlraum"@en .
+
+fusionkb:hydrogen a fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Particle,
+        owl:NamedIndividual ;
+    rdfs:label "hydrogen" ;
+    fusionkg:mentionCount 494 ;
+    skos:prefLabel "hydrogen"@en .
+
+fusionkb:i a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "i" ;
+    fusionkg:mentionCount 9 ;
+    skos:prefLabel "i"@en .
+
+fusionkb:iaea_fusion_energy_conf a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "iaea fusion energy conf." ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "iaea fusion energy conf."@en .
+
+fusionkb:iaea_fusion_energy_conferences a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "iaea fusion energy conferences" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "iaea fusion energy conferences"@en .
+
+fusionkb:ice_layer a fusionkg:Nuclear_Fusion_SystemComponent,
+        owl:NamedIndividual ;
+    rdfs:label "ice layer" ;
+    fusionkg:mentionCount 9 ;
+    skos:prefLabel "ice layer"@en .
+
+fusionkb:icf a fusionkg:Concept,
+        fusionkg:Facility_or_Institution,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_Technique,
+        owl:NamedIndividual ;
+    rdfs:label "icf" ;
+    fusionkg:mentionCount 292 ;
+    skos:prefLabel "icf"@en .
+
+fusionkb:icf_program a fusionkg:Nuclear_Fusion_Program,
+        owl:NamedIndividual ;
+    rdfs:label "icf program" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "icf program"@en .
+
+fusionkb:icrf_heating a fusionkg:Heating_Method,
+        owl:NamedIndividual ;
+    rdfs:label "icrf heating" ;
+    fusionkg:mentionCount 36 ;
+    skos:prefLabel "icrf heating"@en .
+
+fusionkb:icrh a fusionkg:Heating_Method,
+        owl:NamedIndividual ;
+    rdfs:label "icrh" ;
+    fusionkg:mentionCount 45 ;
+    skos:prefLabel "icrh"@en .
+
+fusionkb:ifsa_2003 a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "ifsa-2003" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ifsa-2003"@en .
+
+fusionkb:ignition a fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Plasma_Property,
+        fusionkg:Plasma_event,
+        owl:NamedIndividual ;
+    rdfs:label "ignition" ;
+    fusionkg:mentionCount 236 ;
+    skos:prefLabel "ignition"@en .
+
+fusionkb:ignition_technical_oversight_committee a fusionkg:Organization,
+        owl:NamedIndividual ;
+    rdfs:label "ignition technical oversight committee" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "ignition technical oversight committee"@en .
+
+fusionkb:implosion a fusionkg:Concept,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        owl:NamedIndividual ;
+    rdfs:label "implosion" ;
+    fusionkg:mentionCount 335 ;
+    skos:prefLabel "implosion"@en .
+
+fusionkb:impurity_study_experiment_b a fusionkg:Experiment,
+        owl:NamedIndividual ;
+    rdfs:label "impurity study experiment-b" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "impurity study experiment-b"@en .
+
+fusionkb:inertial_confinement_fusion a fusionkg:Concept,
+        fusionkg:Nuclear_Fusion_Technique,
+        owl:NamedIndividual ;
+    rdfs:label "inertial confinement fusion" ;
+    fusionkg:mentionCount 1005 ;
+    skos:prefLabel "inertial confinement fusion"@en .
+
+fusionkb:inertial_fusion_energy a fusionkg:Research_field,
+        owl:NamedIndividual ;
+    rdfs:label "inertial fusion energy" ;
+    fusionkg:mentionCount 63 ;
+    skos:prefLabel "inertial fusion energy"@en .
+
+fusionkb:inherent_safety a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "inherent safety" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "inherent safety"@en .
+
+fusionkb:injection a fusionkg:Control_Systems,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        owl:NamedIndividual ;
+    rdfs:label "injection" ;
+    fusionkg:mentionCount 512 ;
+    skos:prefLabel "injection"@en .
+
+fusionkb:instability a fusionkg:Plasma_event,
+        owl:NamedIndividual ;
+    rdfs:label "instability" ;
+    fusionkg:mentionCount 186 ;
+    skos:prefLabel "instability"@en .
+
+fusionkb:international_electrotechnical_commission a fusionkg:Organization,
+        owl:NamedIndividual ;
+    rdfs:label "international electrotechnical commission" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "international electrotechnical commission"@en .
+
+fusionkb:international_stellarator_confinement_database a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "international stellarator confinement database" ;
+    fusionkg:mentionCount 4 ;
+    skos:prefLabel "international stellarator confinement database"@en .
+
+fusionkb:international_tokamak a fusionkg:International_Organization,
+        owl:NamedIndividual ;
+    rdfs:label "international tokamak" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "international tokamak"@en .
+
+fusionkb:ion a fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Particle,
+        owl:NamedIndividual ;
+    rdfs:label "ion" ;
+    fusionkg:mentionCount 492 ;
+    skos:prefLabel "ion"@en .
+
+fusionkb:ion_bernstein_wave_heating a fusionkg:Heating_Method,
+        owl:NamedIndividual ;
+    rdfs:label "ion bernstein wave heating" ;
+    fusionkg:mentionCount 8 ;
+    skos:prefLabel "ion bernstein wave heating"@en .
+
+fusionkb:ion_cyclotron_heating a fusionkg:Heating_Method,
+        owl:NamedIndividual ;
+    rdfs:label "ion cyclotron heating" ;
+    fusionkg:mentionCount 8 ;
+    skos:prefLabel "ion cyclotron heating"@en .
+
+fusionkb:ion_cyclotron_resonance_heating a fusionkg:Heating_Method,
+        owl:NamedIndividual ;
+    rdfs:label "ion cyclotron resonance heating" ;
+    fusionkg:mentionCount 33 ;
+    skos:prefLabel "ion cyclotron resonance heating"@en .
+
+fusionkb:ions a fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        owl:NamedIndividual ;
+    rdfs:label "ions" ;
+    fusionkg:mentionCount 452 ;
+    skos:prefLabel "ions"@en .
+
+fusionkb:iss95 a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "iss95" ;
+    fusionkg:mentionCount 5 ;
+    skos:prefLabel "iss95"@en .
+
+fusionkb:issec a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "issec" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "issec"@en .
+
+fusionkb:itb a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "itb" ;
+    fusionkg:mentionCount 45 ;
+    skos:prefLabel "itb"@en .
+
+fusionkb:iter a fusionkg:Facility_or_Institution,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        owl:NamedIndividual ;
+    rdfs:label "iter" ;
+    fusionkg:mentionCount 651 ;
+    skos:prefLabel "iter"@en .
+
+fusionkb:jacobi_elliptic_functions a fusionkg:Mathematical_Concept,
+        owl:NamedIndividual ;
+    rdfs:label "jacobi elliptic functions" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "jacobi elliptic functions"@en .
+
+fusionkb:japan a fusionkg:Country_and_location,
+        owl:NamedIndividual ;
+    rdfs:label "japan" ;
+    fusionkg:mentionCount 49 ;
+    skos:prefLabel "japan"@en .
+
+fusionkb:jet a fusionkg:Concept,
+        fusionkg:Facility_or_Institution,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "jet" ;
+    fusionkg:mentionCount 294 ;
+    skos:prefLabel "jet"@en .
+
+fusionkb:jupiter a fusionkg:Celestial_Body,
+        owl:NamedIndividual ;
+    rdfs:label "jupiter" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "jupiter"@en .
+
+fusionkb:kadomtsev a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "kadomtsev" ;
+    fusionkg:mentionCount 5 ;
+    skos:prefLabel "kadomtsev"@en .
+
+fusionkb:kev a fusionkg:Unit,
+        owl:NamedIndividual ;
+    rdfs:label "kev" ;
+    fusionkg:mentionCount 9 ;
+    skos:prefLabel "kev"@en .
+
+fusionkb:korea a fusionkg:Country_and_location,
+        owl:NamedIndividual ;
+    rdfs:label "korea" ;
+    fusionkg:mentionCount 27 ;
+    skos:prefLabel "korea"@en .
+
+fusionkb:landreman a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "landreman" ;
+    fusionkg:mentionCount 5 ;
+    skos:prefLabel "landreman"@en .
+
+fusionkb:langmuir_probes a fusionkg:Detection_and_Monitoring_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "langmuir probes" ;
+    fusionkg:mentionCount 52 ;
+    skos:prefLabel "langmuir probes"@en .
+
+fusionkb:laser a fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Technique,
+        owl:NamedIndividual ;
+    rdfs:label "laser" ;
+    fusionkg:mentionCount 288 ;
+    skos:prefLabel "laser"@en .
+
+fusionkb:lausanne a fusionkg:City,
+        owl:NamedIndividual ;
+    rdfs:label "lausanne" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "lausanne"@en .
+
+fusionkb:lexan a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "lexan" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "lexan"@en .
+
+fusionkb:lhcd a fusionkg:Control_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "lhcd" ;
+    fusionkg:mentionCount 88 ;
+    skos:prefLabel "lhcd"@en .
+
+fusionkb:limiter a fusionkg:Experimental_Apparatus,
+        fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "limiter" ;
+    fusionkg:mentionCount 216 ;
+    skos:prefLabel "limiter"@en .
+
+fusionkb:linux a fusionkg:Operating_System,
+        owl:NamedIndividual ;
+    rdfs:label "linux" ;
+    fusionkg:mentionCount 3 ;
+    skos:prefLabel "linux"@en .
+
+fusionkb:liquid a fusionkg:State_of_Matter,
+        owl:NamedIndividual ;
+    rdfs:label "liquid" ;
+    fusionkg:mentionCount 9 ;
+    skos:prefLabel "liquid"@en .
+
+fusionkb:lithium a fusionkg:Chemical_Element_or_Compound,
+        owl:NamedIndividual ;
+    rdfs:label "lithium" ;
+    fusionkg:mentionCount 245 ;
+    skos:prefLabel "lithium"@en .
+
+fusionkb:ltcc_low_temperature_co_fired_ceramic a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "ltcc low-temperature co-fired ceramic" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ltcc low-temperature co-fired ceramic"@en .
+
+fusionkb:magnetic_field a fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Physics_Entity,
+        owl:NamedIndividual ;
+    rdfs:label "magnetic field" ;
+    fusionkg:mentionCount 1383 ;
+    skos:prefLabel "magnetic field"@en .
+
+fusionkb:magnetic_islands a fusionkg:Plasma_event,
+        owl:NamedIndividual ;
+    rdfs:label "magnetic islands" ;
+    fusionkg:mentionCount 136 ;
+    skos:prefLabel "magnetic islands"@en .
+
+fusionkb:magnetic_shear a fusionkg:Field_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "magnetic shear" ;
+    fusionkg:mentionCount 180 ;
+    skos:prefLabel "magnetic shear"@en .
+
+fusionkb:mdsplus a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "mdsplus" ;
+    fusionkg:mentionCount 11 ;
+    skos:prefLabel "mdsplus"@en .
+
+fusionkb:measured_angles a fusionkg:Detection_and_Monitoring_systems,
+        owl:NamedIndividual ;
+    rdfs:label "measured angles" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "measured angles"@en .
+
+fusionkb:metalalloy a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "metalalloy" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "metalalloy"@en .
+
+fusionkb:mhd a fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "mhd" ;
+    fusionkg:mentionCount 255 ;
+    skos:prefLabel "mhd"@en .
+
+fusionkb:model a fusionkg:Software_and_simulation,
+        fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "model" ;
+    fusionkg:mentionCount 159 ;
+    skos:prefLabel "model"@en .
+
+fusionkb:models a fusionkg:Software_and_simulation,
+        owl:NamedIndividual ;
+    rdfs:label "models" ;
+    fusionkg:mentionCount 52 ;
+    skos:prefLabel "models"@en .
+
+fusionkb:national_ignition_campaign a fusionkg:Nuclear_Fusion_Campaign,
+        owl:NamedIndividual ;
+    rdfs:label "national ignition campaign" ;
+    fusionkg:mentionCount 18 ;
+    skos:prefLabel "national ignition campaign"@en .
+
+fusionkb:national_ignition_facility a fusionkg:Experimental_Apparatus,
+        fusionkg:Facility_or_Institution,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        owl:NamedIndividual ;
+    rdfs:label "national ignition facility" ;
+    fusionkg:mentionCount 229 ;
+    skos:prefLabel "national ignition facility"@en .
+
+fusionkb:nbi a fusionkg:Control_Systems,
+        fusionkg:Heating_Method,
+        fusionkg:Heating_and_Current_Drive,
+        owl:NamedIndividual ;
+    rdfs:label "nbi" ;
+    fusionkg:mentionCount 105 ;
+    skos:prefLabel "nbi"@en .
+
+fusionkb:neutral_beam_injection a fusionkg:Control_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "neutral beam injection" ;
+    fusionkg:mentionCount 157 ;
+    skos:prefLabel "neutral beam injection"@en .
+
+fusionkb:neutron a fusionkg:Particle,
+        fusionkg:Physics_Entity,
+        fusionkg:particle,
+        owl:NamedIndividual ;
+    rdfs:label "neutron" ;
+    fusionkg:mentionCount 869 ;
+    skos:prefLabel "neutron"@en .
+
+fusionkb:neutron_shielding a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "neutron shielding" ;
+    fusionkg:mentionCount 10 ;
+    skos:prefLabel "neutron shielding"@en .
+
+fusionkb:nexp_subproject a fusionkg:Project,
+        owl:NamedIndividual ;
+    rdfs:label "nexp subproject" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "nexp subproject"@en .
+
+fusionkb:nextower_project a fusionkg:Research_Project,
+        owl:NamedIndividual ;
+    rdfs:label "nextower project" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "nextower project"@en .
+
+fusionkb:nif a fusionkg:Facility_or_Institution,
+        owl:NamedIndividual ;
+    rdfs:label "nif" ;
+    fusionkg:mentionCount 180 ;
+    skos:prefLabel "nif"@en .
+
+fusionkb:nifs a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "nifs" ;
+    fusionkg:mentionCount 4 ;
+    skos:prefLabel "nifs"@en .
+
+fusionkb:nnsadp a fusionkg:Program,
+        owl:NamedIndividual ;
+    rdfs:label "nnsadp" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "nnsadp"@en .
+
+fusionkb:nucl a fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "nucl" ;
+    fusionkg:mentionCount 31 ;
+    skos:prefLabel "nucl"@en .
+
+fusionkb:nuclear_fusion a fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "nuclear fusion" ;
+    fusionkg:mentionCount 98 ;
+    skos:prefLabel "nuclear fusion"@en .
+
+fusionkb:nuclear_fusion_applications a fusionkg:Nuclear_Fusion_Application,
+        owl:NamedIndividual ;
+    rdfs:label "nuclear fusion applications" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "nuclear fusion applications"@en .
+
+fusionkb:nuclear_fusion_research a fusionkg:Research_field,
+        owl:NamedIndividual ;
+    rdfs:label "nuclear fusion research" ;
+    fusionkg:mentionCount 37 ;
+    skos:prefLabel "nuclear fusion research"@en .
+
+fusionkb:numerical_simulations a fusionkg:Software_and_simulation,
+        owl:NamedIndividual ;
+    rdfs:label "numerical simulations" ;
+    fusionkg:mentionCount 65 ;
+    skos:prefLabel "numerical simulations"@en .
+
+fusionkb:ods_steel a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "ods steel" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ods steel"@en .
+
+fusionkb:ohmic_heating a fusionkg:Heating_Method,
+        owl:NamedIndividual ;
+    rdfs:label "ohmic heating" ;
+    fusionkg:mentionCount 112 ;
+    skos:prefLabel "ohmic heating"@en .
+
+fusionkb:omega a fusionkg:Facility_or_Institution,
+        owl:NamedIndividual ;
+    rdfs:label "omega" ;
+    fusionkg:mentionCount 105 ;
+    skos:prefLabel "omega"@en .
+
+fusionkb:op_11 a fusionkg:Nuclear_Fusion_Experimental_Facility_phase,
+        owl:NamedIndividual ;
+    rdfs:label "op 1.1" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "op 1.1"@en .
+
+fusionkb:paper a fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "paper" ;
+    fusionkg:mentionCount 78 ;
+    skos:prefLabel "paper"@en .
+
+fusionkb:pcx_diagnostic a fusionkg:Nuclear_Fusion_Diagnostic,
+        owl:NamedIndividual ;
+    rdfs:label "pcx diagnostic" ;
+    fusionkg:mentionCount 5 ;
+    skos:prefLabel "pcx diagnostic"@en .
+
+fusionkb:phase a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "phase" ;
+    fusionkg:mentionCount 26 ;
+    skos:prefLabel "phase"@en .
+
+fusionkb:phys a fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "phys" ;
+    fusionkg:mentionCount 40 ;
+    skos:prefLabel "phys"@en .
+
+fusionkb:physics a fusionkg:Research_field,
+        owl:NamedIndividual ;
+    rdfs:label "physics" ;
+    fusionkg:mentionCount 31 ;
+    skos:prefLabel "physics"@en .
+
+fusionkb:plasma a fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "plasma" ;
+    fusionkg:mentionCount 973 ;
+    skos:prefLabel "plasma"@en .
+
+fusionkb:plasma_current a fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Physical_Process,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "plasma current" ;
+    fusionkg:mentionCount 426 ;
+    skos:prefLabel "plasma current"@en .
+
+fusionkb:plasma_density a fusionkg:Plasma_dynamic_and_behavior,
+        owl:NamedIndividual ;
+    rdfs:label "plasma density" ;
+    fusionkg:mentionCount 308 ;
+    skos:prefLabel "plasma density"@en .
+
+fusionkb:plasma_edge a fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "plasma edge" ;
+    fusionkg:mentionCount 275 ;
+    skos:prefLabel "plasma edge"@en .
+
+fusionkb:plasma_parameters a fusionkg:Nuclear_Fusion_System_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "plasma parameters" ;
+    fusionkg:mentionCount 165 ;
+    skos:prefLabel "plasma parameters"@en .
+
+fusionkb:plasma_physics a fusionkg:Field_of_Study,
+        fusionkg:Research_field,
+        owl:NamedIndividual ;
+    rdfs:label "plasma physics" ;
+    fusionkg:mentionCount 50 ;
+    skos:prefLabel "plasma physics"@en .
+
+fusionkb:plasmas a fusionkg:Plasma_event,
+        fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "plasmas" ;
+    fusionkg:mentionCount 147 ;
+    skos:prefLabel "plasmas"@en .
+
+fusionkb:poloidal_field a fusionkg:Field_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "poloidal field" ;
+    fusionkg:mentionCount 308 ;
+    skos:prefLabel "poloidal field"@en .
+
+fusionkb:power a fusionkg:Control_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "power" ;
+    fusionkg:mentionCount 348 ;
+    skos:prefLabel "power"@en .
+
+fusionkb:practical_engineering_and_operational_issues a fusionkg:Engineering_Issue,
+        owl:NamedIndividual ;
+    rdfs:label "practical engineering and operational issues" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "practical engineering and operational issues"@en .
+
+fusionkb:probe a fusionkg:Detection_and_Monitoring_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "probe" ;
+    fusionkg:mentionCount 70 ;
+    skos:prefLabel "probe"@en .
+
+fusionkb:project a fusionkg:Project,
+        owl:NamedIndividual ;
+    rdfs:label "project" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "project"@en .
+
+fusionkb:radial_electric_field a fusionkg:Field_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "radial electric field" ;
+    fusionkg:mentionCount 338 ;
+    skos:prefLabel "radial electric field"@en .
+
+fusionkb:radiation a fusionkg:Physical_Process,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "radiation" ;
+    fusionkg:mentionCount 481 ;
+    skos:prefLabel "radiation"@en .
+
+fusionkb:ratio_tokamak_experiment a fusionkg:Experiment,
+        owl:NamedIndividual ;
+    rdfs:label "ratio tokamak experiment" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ratio tokamak experiment"@en .
+
+fusionkb:recycling a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "recycling" ;
+    fusionkg:mentionCount 50 ;
+    skos:prefLabel "recycling"@en .
+
+fusionkb:remote_maintenance a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "remote maintenance" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "remote maintenance"@en .
+
+fusionkb:rev_lett a fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "rev. lett." ;
+    fusionkg:mentionCount 23 ;
+    skos:prefLabel "rev. lett."@en .
+
+fusionkb:rocket_propulsion_scheme a fusionkg:Application,
+        owl:NamedIndividual ;
+    rdfs:label "rocket propulsion scheme" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "rocket propulsion scheme"@en .
+
+fusionkb:rohacell_foam a fusionkg:Material,
+        owl:NamedIndividual ;
+    rdfs:label "rohacell foam" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "rohacell foam"@en .
+
+fusionkb:rotational_transform a fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "rotational transform" ;
+    fusionkg:mentionCount 186 ;
+    skos:prefLabel "rotational transform"@en .
+
+fusionkb:safety a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "safety" ;
+    fusionkg:mentionCount 17 ;
+    skos:prefLabel "safety"@en .
+
+fusionkb:safety_factor a fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Safety_Feature_and_Regulatory_Standard,
+        fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "safety factor" ;
+    fusionkg:mentionCount 173 ;
+    skos:prefLabel "safety factor"@en .
+
+fusionkb:scrape_off_layer a fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "scrape-off layer" ;
+    fusionkg:mentionCount 275 ;
+    skos:prefLabel "scrape-off layer"@en .
+
+fusionkb:shafranov a fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "shafranov" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "shafranov"@en .
+
+fusionkb:shield a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "shield" ;
+    fusionkg:mentionCount 22 ;
+    skos:prefLabel "shield"@en .
+
+fusionkb:shielding a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "shielding" ;
+    fusionkg:mentionCount 28 ;
+    skos:prefLabel "shielding"@en .
+
+fusionkb:simulation a fusionkg:Software_and_simulation,
+        owl:NamedIndividual ;
+    rdfs:label "simulation" ;
+    fusionkg:mentionCount 92 ;
+    skos:prefLabel "simulation"@en .
+
+fusionkb:simulations a fusionkg:Software_and_simulation,
+        fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "simulations" ;
+    fusionkg:mentionCount 157 ;
+    skos:prefLabel "simulations"@en .
+
+fusionkb:smp_2002 a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "smp-2002" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "smp-2002"@en .
+
+fusionkb:solid a fusionkg:State_of_Matter,
+        owl:NamedIndividual ;
+    rdfs:label "solid" ;
+    fusionkg:mentionCount 7 ;
+    skos:prefLabel "solid"@en .
+
+fusionkb:space_missions a fusionkg:Application,
+        owl:NamedIndividual ;
+    rdfs:label "space missions" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "space missions"@en .
+
+fusionkb:space_power_applications a fusionkg:Application,
+        owl:NamedIndividual ;
+    rdfs:label "space power applications" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "space power applications"@en .
+
+fusionkb:spec a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "spec" ;
+    fusionkg:mentionCount 7 ;
+    skos:prefLabel "spec"@en .
+
+fusionkb:spherical_shell a fusionkg:Geometry,
+        owl:NamedIndividual ;
+    rdfs:label "spherical shell" ;
+    fusionkg:mentionCount 7 ;
+    skos:prefLabel "spherical shell"@en .
+
+fusionkb:spi a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "spi" ;
+    fusionkg:mentionCount 6 ;
+    skos:prefLabel "spi"@en .
+
+fusionkb:springer a fusionkg:Publisher,
+        owl:NamedIndividual ;
+    rdfs:label "springer" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "springer"@en .
+
+fusionkb:ss_433 a fusionkg:Celestial_object,
+        owl:NamedIndividual ;
+    rdfs:label "ss 433" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ss 433"@en .
+
+fusionkb:stability a fusionkg:Plasma_event,
+        fusionkg:Theory_and_Calculation,
+        owl:NamedIndividual ;
+    rdfs:label "stability" ;
+    fusionkg:mentionCount 172 ;
+    skos:prefLabel "stability"@en .
+
+fusionkb:stability_analysis a fusionkg:Stability_analysis,
+        owl:NamedIndividual ;
+    rdfs:label "stability analysis" ;
+    fusionkg:mentionCount 10 ;
+    skos:prefLabel "stability analysis"@en .
+
+fusionkb:stellarator a fusionkg:Nuclear_Fusion_Device_Type,
+        owl:NamedIndividual ;
+    rdfs:label "stellarator" ;
+    fusionkg:mentionCount 2025 ;
+    skos:prefLabel "stellarator"@en .
+
+fusionkb:stellarators a fusionkg:Nuclear_Fusion_Device_Type,
+        owl:NamedIndividual ;
+    rdfs:label "stellarators" ;
+    fusionkg:mentionCount 447 ;
+    skos:prefLabel "stellarators"@en .
+
+fusionkb:stellcon a fusionkg:Event,
+        owl:NamedIndividual ;
+    rdfs:label "stellcon" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "stellcon"@en .
+
+fusionkb:stopping_power a fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "stopping power" ;
+    fusionkg:mentionCount 32 ;
+    skos:prefLabel "stopping power"@en .
+
+fusionkb:sun a fusionkg:Astrophysical_Object,
+        fusionkg:Person,
+        owl:NamedIndividual ;
+    rdfs:label "sun" ;
+    fusionkg:mentionCount 12 ;
+    skos:prefLabel "sun"@en .
+
+fusionkb:surface a fusionkg:Nuclear_Fusion_SystemComponent,
+        owl:NamedIndividual ;
+    rdfs:label "surface" ;
+    fusionkg:mentionCount 33 ;
+    skos:prefLabel "surface"@en .
+
+fusionkb:tae a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "tae" ;
+    fusionkg:mentionCount 14 ;
+    skos:prefLabel "tae"@en .
+
+fusionkb:target a fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "target" ;
+    fusionkg:mentionCount 264 ;
+    skos:prefLabel "target"@en .
+
+fusionkb:targets a fusionkg:Target,
+        owl:NamedIndividual ;
+    rdfs:label "targets" ;
+    fusionkg:mentionCount 78 ;
+    skos:prefLabel "targets"@en .
+
+fusionkb:temperature a fusionkg:Physics_Entity,
+        fusionkg:Plasma_property,
+        owl:NamedIndividual ;
+    rdfs:label "temperature" ;
+    fusionkg:mentionCount 1146 ;
+    skos:prefLabel "temperature"@en .
+
+fusionkb:tftr a fusionkg:Facility_or_Institution,
+        owl:NamedIndividual ;
+    rdfs:label "tftr" ;
+    fusionkg:mentionCount 121 ;
+    skos:prefLabel "tftr"@en .
+
+fusionkb:thermal_confinement a fusionkg:Plasma_propertyy,
+        owl:NamedIndividual ;
+    rdfs:label "thermal confinement" ;
+    fusionkg:mentionCount 4 ;
+    skos:prefLabel "thermal confinement"@en .
+
+fusionkb:thick_film_technology a fusionkg:Technology,
+        owl:NamedIndividual ;
+    rdfs:label "thick-film technology" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "thick-film technology"@en .
+
+fusionkb:time a fusionkg:Time_reference,
+        owl:NamedIndividual ;
+    rdfs:label "time" ;
+    fusionkg:mentionCount 26 ;
+    skos:prefLabel "time"@en .
+
+fusionkb:tj_ii a fusionkg:Nuclear_Fusion_Experimental_Facility,
+        owl:NamedIndividual ;
+    rdfs:label "tj-ii" ;
+    fusionkg:mentionCount 196 ;
+    skos:prefLabel "tj-ii"@en .
+
+fusionkb:tokamak a fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        owl:NamedIndividual ;
+    rdfs:label "tokamak" ;
+    fusionkg:mentionCount 4884 ;
+    skos:prefLabel "tokamak"@en .
+
+fusionkb:tokamak_fusion_test_reactor a fusionkg:Facility_or_Institution,
+        owl:NamedIndividual ;
+    rdfs:label "tokamak fusion test reactor" ;
+    fusionkg:mentionCount 84 ;
+    skos:prefLabel "tokamak fusion test reactor"@en .
+
+fusionkb:tokamaks a fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        owl:NamedIndividual ;
+    rdfs:label "tokamaks" ;
+    fusionkg:mentionCount 773 ;
+    skos:prefLabel "tokamaks"@en .
+
+fusionkb:toroidal_field a fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "toroidal field" ;
+    fusionkg:mentionCount 186 ;
+    skos:prefLabel "toroidal field"@en .
+
+fusionkb:toroidal_magnetic_field a fusionkg:Field_Configuration,
+        owl:NamedIndividual ;
+    rdfs:label "toroidal magnetic field" ;
+    fusionkg:mentionCount 266 ;
+    skos:prefLabel "toroidal magnetic field"@en .
+
+fusionkb:torr a fusionkg:Unit_of_Measurement,
+        owl:NamedIndividual ;
+    rdfs:label "torr" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "torr"@en .
+
+fusionkb:transport a fusionkg:Concept,
+        fusionkg:Plasma_dynamic_and_behavior,
+        owl:NamedIndividual ;
+    rdfs:label "transport" ;
+    fusionkg:mentionCount 328 ;
+    skos:prefLabel "transport"@en .
+
+fusionkb:tritium a fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Particle,
+        fusionkg:Theory_and_Calculation,
+        fusionkg:chemical_element_or_compound,
+        owl:NamedIndividual ;
+    rdfs:label "tritium" ;
+    fusionkg:mentionCount 1021 ;
+    skos:prefLabel "tritium"@en .
+
+fusionkb:ts3 a fusionkg:Nuclear_Fusion_Experiment,
+        owl:NamedIndividual ;
+    rdfs:label "ts3" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ts3"@en .
+
+fusionkb:tungsten a fusionkg:Chemical_Element_or_Compound,
+        owl:NamedIndividual ;
+    rdfs:label "tungsten" ;
+    fusionkg:mentionCount 276 ;
+    skos:prefLabel "tungsten"@en .
+
+fusionkb:turbulence a fusionkg:Concept,
+        fusionkg:Physical_Process,
+        fusionkg:Plasma_dynamic_and_behavior,
+        owl:NamedIndividual ;
+    rdfs:label "turbulence" ;
+    fusionkg:mentionCount 432 ;
+    skos:prefLabel "turbulence"@en .
+
+fusionkb:ultra_fast_charge_exchange_recombination_spectroscopy a fusionkg:Nuclear_Fusion_Diagnostic_Technique,
+        owl:NamedIndividual ;
+    rdfs:label "ultra-fast charge exchange recombination spectroscopy" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "ultra-fast charge exchange recombination spectroscopy"@en .
+
+fusionkb:us a fusionkg:Country_and_location,
+        owl:NamedIndividual ;
+    rdfs:label "u.s.",
+        "us" ;
+    fusionkg:mentionCount 27,
+        46 ;
+    skos:prefLabel "u.s."@en,
+        "us"@en .
+
+fusionkb:vacuum_feedthrough a fusionkg:Nuclear_Fusion_Experimental_Facility_Component,
+        owl:NamedIndividual ;
+    rdfs:label "vacuum feedthrough" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "vacuum feedthrough"@en .
+
+fusionkb:validation a fusionkg:Safety_Feature_and_Regulatory_Standard,
+        owl:NamedIndividual ;
+    rdfs:label "validation" ;
+    fusionkg:mentionCount 7 ;
+    skos:prefLabel "validation"@en .
+
+fusionkb:vns a fusionkg:Acronym,
+        owl:NamedIndividual ;
+    rdfs:label "vns" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "vns"@en .
+
+fusionkb:w7_x a fusionkg:Facility_or_Institution,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        owl:NamedIndividual ;
+    rdfs:label "w7-x" ;
+    fusionkg:mentionCount 209 ;
+    skos:prefLabel "w7-x"@en .
+
+fusionkb:w_ia a fusionkg:Nuclear_Fusion_Device,
+        owl:NamedIndividual ;
+    rdfs:label "w ia" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "w ia"@en .
+
+fusionkb:w_ib a fusionkg:Nuclear_Fusion_Device,
+        owl:NamedIndividual ;
+    rdfs:label "w ib" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "w ib"@en .
+
+fusionkb:w_iia a fusionkg:Nuclear_Fusion_Device,
+        owl:NamedIndividual ;
+    rdfs:label "w iia" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "w iia"@en .
+
+fusionkb:w_iib a fusionkg:Nuclear_Fusion_Device,
+        owl:NamedIndividual ;
+    rdfs:label "w iib" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "w iib"@en .
+
+fusionkb:w_viia a fusionkg:Nuclear_Fusion_Device,
+        owl:NamedIndividual ;
+    rdfs:label "w viia" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "w viia"@en .
+
+fusionkb:wall a fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Plasma_region,
+        owl:NamedIndividual ;
+    rdfs:label "wall" ;
+    fusionkg:mentionCount 483 ;
+    skos:prefLabel "wall"@en .
+
+fusionkb:water_cooled a fusionkg:Cooling_System,
+        owl:NamedIndividual ;
+    rdfs:label "water-cooled" ;
+    fusionkg:mentionCount 2 ;
+    skos:prefLabel "water-cooled"@en .
+
+fusionkb:web_of_science a fusionkg:Database,
+        owl:NamedIndividual ;
+    rdfs:label "web of science" ;
+    fusionkg:mentionCount 15 ;
+    skos:prefLabel "web of science"@en .
+
+fusionkb:weinheim a fusionkg:Country_and_location,
+        fusionkg:Location,
+        owl:NamedIndividual ;
+    rdfs:label "weinheim" ;
+    fusionkg:mentionCount 29 ;
+    skos:prefLabel "weinheim"@en .
+
+fusionkb:wendelstein_line a fusionkg:Nuclear_Fusion_Device_Line,
+        owl:NamedIndividual ;
+    rdfs:label "wendelstein line" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "wendelstein line"@en .
+
+fusionkb:white_dwarf_stars a fusionkg:Astrophysical_Object,
+        owl:NamedIndividual ;
+    rdfs:label "white dwarf stars" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "white dwarf stars"@en .
+
+fusionkb:wiley_vch_verlag_gmbh_co_kgaa a fusionkg:Scientific_Publication_and_citation,
+        owl:NamedIndividual ;
+    rdfs:label "wiley-vch verlag gmbh co. kgaa" ;
+    fusionkg:mentionCount 30 ;
+    skos:prefLabel "wiley-vch verlag gmbh co. kgaa"@en .
+
+fusionkb:workshop_on_mfe_roadmapping_in_the_iter_era a fusionkg:Workshop,
+        owl:NamedIndividual ;
+    rdfs:label "workshop on mfe roadmapping in the iter era" ;
+    fusionkg:mentionCount 1 ;
+    skos:prefLabel "workshop on mfe roadmapping in the iter era"@en .
+
+fusionkb:x_ray a fusionkg:Detection_and_Monitoring_Systems,
+        owl:NamedIndividual ;
+    rdfs:label "x-ray" ;
+    fusionkg:mentionCount 67 ;
+    skos:prefLabel "x-ray"@en .
+
+fusionkg: a owl:Ontology ;
+    rdfs:label "Fusion Energy Knowledge Graph Ontology" ;
+    dcterms:creator "FusionKG Analysis Pipeline" ;
+    rdfs:comment "Auto-generated from the Fusion KG (Loreti et al., 2025). Contains entity categories as classes, inter-category relationships as object properties, and top entities as named individuals." ;
+    owl:versionInfo "1.0.0-auto" .
+
+fusionkg:achieves a owl:ObjectProperty ;
+    rdfs:label "achieves" ;
+    fusionkg:neo4jRelType "ACHIEVES" ;
+    rdfs:comment "Subject attains the object as a measurable result or performance metric." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity ;
+    rdfs:subPropertyOf fusionkg:typedRelation .
+
+fusionkg:coOccurs_Chemical_Element_or_Compound_Particle a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Chemical Element or Compound <-> Particle" ;
+    rdfs:comment "Total co-occurrence weight: 5215" ;
+    rdfs:domain fusionkg:Chemical_Element_or_Compound ;
+    rdfs:range fusionkg:Particle ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Chemical_Element_or_Compound_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Chemical Element or Compound <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 4072" ;
+    rdfs:domain fusionkg:Chemical_Element_or_Compound ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Concept_Nuclear_Fusion_Device_Type a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Concept <-> Nuclear Fusion Device Type" ;
+    rdfs:comment "Total co-occurrence weight: 3952" ;
+    rdfs:domain fusionkg:Concept ;
+    rdfs:range fusionkg:Nuclear_Fusion_Device_Type ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Concept_Physical_Process a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Concept <-> Physical Process" ;
+    rdfs:comment "Total co-occurrence weight: 3629" ;
+    rdfs:domain fusionkg:Concept ;
+    rdfs:range fusionkg:Physical_Process ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Concept_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Concept <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 6550" ;
+    rdfs:domain fusionkg:Concept ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Concept_Plasma_property a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Concept <-> Plasma property" ;
+    rdfs:comment "Total co-occurrence weight: 3491" ;
+    rdfs:domain fusionkg:Concept ;
+    rdfs:range fusionkg:Plasma_property ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Experimental_Apparatus_Nuclear_Fusion_System_Component a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Experimental Apparatus <-> Nuclear Fusion System Component" ;
+    rdfs:comment "Total co-occurrence weight: 3533" ;
+    rdfs:domain fusionkg:Experimental_Apparatus ;
+    rdfs:range fusionkg:Nuclear_Fusion_System_Component ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Experimental_Apparatus_Physical_Process a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Experimental Apparatus <-> Physical Process" ;
+    rdfs:comment "Total co-occurrence weight: 4343" ;
+    rdfs:domain fusionkg:Experimental_Apparatus ;
+    rdfs:range fusionkg:Physical_Process ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Experimental_Apparatus_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Experimental Apparatus <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 6813" ;
+    rdfs:domain fusionkg:Experimental_Apparatus ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Device_Type_Nuclear_Fusion_Experimental_Facility a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Device Type <-> Nuclear Fusion Experimental Facility" ;
+    rdfs:comment "Total co-occurrence weight: 4853" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Device_Type ;
+    rdfs:range fusionkg:Nuclear_Fusion_Experimental_Facility ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Device_Type_Nuclear_Fusion_System_Component a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Device Type <-> Nuclear Fusion System Component" ;
+    rdfs:comment "Total co-occurrence weight: 4262" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Device_Type ;
+    rdfs:range fusionkg:Nuclear_Fusion_System_Component ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Device_Type_Particle a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Device Type <-> Particle" ;
+    rdfs:comment "Total co-occurrence weight: 3754" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Device_Type ;
+    rdfs:range fusionkg:Particle ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Device_Type_Physical_Process a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Device Type <-> Physical Process" ;
+    rdfs:comment "Total co-occurrence weight: 4863" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Device_Type ;
+    rdfs:range fusionkg:Physical_Process ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Device_Type_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Device Type <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 7876" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Device_Type ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Device_Type_Plasma_dynamic_and_behavior a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Device Type <-> Plasma dynamic and behavior" ;
+    rdfs:comment "Total co-occurrence weight: 3530" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Device_Type ;
+    rdfs:range fusionkg:Plasma_dynamic_and_behavior ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Device_Type_Plasma_property a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Device Type <-> Plasma property" ;
+    rdfs:comment "Total co-occurrence weight: 4047" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Device_Type ;
+    rdfs:range fusionkg:Plasma_property ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Experimental_Facility_Physical_Process a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Experimental Facility <-> Physical Process" ;
+    rdfs:comment "Total co-occurrence weight: 3520" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Experimental_Facility ;
+    rdfs:range fusionkg:Physical_Process ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Experimental_Facility_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Experimental Facility <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 5255" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Experimental_Facility ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_System_Component_Physical_Process a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion System Component <-> Physical Process" ;
+    rdfs:comment "Total co-occurrence weight: 3764" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_System_Component ;
+    rdfs:range fusionkg:Physical_Process ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_System_Component_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion System Component <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 7899" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_System_Component ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_System_Component_Plasma_property a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion System Component <-> Plasma property" ;
+    rdfs:comment "Total co-occurrence weight: 3663" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_System_Component ;
+    rdfs:range fusionkg:Plasma_property ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Nuclear_Fusion_Technique_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Nuclear Fusion Technique <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 4048" ;
+    rdfs:domain fusionkg:Nuclear_Fusion_Technique ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Particle_Physical_Process a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Particle <-> Physical Process" ;
+    rdfs:comment "Total co-occurrence weight: 4164" ;
+    rdfs:domain fusionkg:Particle ;
+    rdfs:range fusionkg:Physical_Process ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Particle_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Particle <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 7920" ;
+    rdfs:domain fusionkg:Particle ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Particle_Plasma_property a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Particle <-> Plasma property" ;
+    rdfs:comment "Total co-occurrence weight: 3740" ;
+    rdfs:domain fusionkg:Particle ;
+    rdfs:range fusionkg:Plasma_property ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Physical_Process_Physics_Entity a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Physical Process <-> Physics Entity" ;
+    rdfs:comment "Total co-occurrence weight: 9629" ;
+    rdfs:domain fusionkg:Physical_Process ;
+    rdfs:range fusionkg:Physics_Entity ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Physical_Process_Plasma_property a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Physical Process <-> Plasma property" ;
+    rdfs:comment "Total co-occurrence weight: 4282" ;
+    rdfs:domain fusionkg:Physical_Process ;
+    rdfs:range fusionkg:Plasma_property ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Physics_Entity_Plasma_dynamic_and_behavior a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Physics Entity <-> Plasma dynamic and behavior" ;
+    rdfs:comment "Total co-occurrence weight: 6433" ;
+    rdfs:domain fusionkg:Physics_Entity ;
+    rdfs:range fusionkg:Plasma_dynamic_and_behavior ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Physics_Entity_Plasma_property a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Physics Entity <-> Plasma property" ;
+    rdfs:comment "Total co-occurrence weight: 10913" ;
+    rdfs:domain fusionkg:Physics_Entity ;
+    rdfs:range fusionkg:Plasma_property ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:coOccurs_Physics_Entity_Plasma_region a owl:ObjectProperty ;
+    rdfs:label "co-occurs: Physics Entity <-> Plasma region" ;
+    rdfs:comment "Total co-occurrence weight: 3544" ;
+    rdfs:domain fusionkg:Physics_Entity ;
+    rdfs:range fusionkg:Plasma_region ;
+    rdfs:subPropertyOf fusionkg:coOccursWith .
+
+fusionkg:comparesTo a owl:ObjectProperty,
+        owl:SymmetricProperty ;
+    rdfs:label "compares to" ;
+    fusionkg:neo4jRelType "COMPARES_TO" ;
+    rdfs:comment "Subject is scientifically compared against the object. Symmetric." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity ;
+    rdfs:subPropertyOf fusionkg:typedRelation .
+
+fusionkg:contains a owl:ObjectProperty ;
+    rdfs:label "contains" ;
+    fusionkg:neo4jRelType "CONTAINS" ;
+    rdfs:comment "Subject physically or conceptually contains the object (e.g. a tokamak contains plasma)." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity ;
+    rdfs:subPropertyOf fusionkg:typedRelation .
+
+fusionkg:improves a owl:ObjectProperty ;
+    rdfs:label "improves" ;
+    fusionkg:neo4jRelType "IMPROVES" ;
+    rdfs:comment "Subject enhances the performance or quality of the object." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity ;
+    rdfs:subPropertyOf fusionkg:typedRelation .
+
+fusionkg:isTypeOf a owl:ObjectProperty ;
+    rdfs:label "is type of" ;
+    fusionkg:neo4jRelType "IS_TYPE_OF" ;
+    rdfs:comment "Subject is a specific instance or sub-type of the object (e.g. ITER is type of Tokamak)." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity ;
+    rdfs:subPropertyOf fusionkg:typedRelation .
+
+fusionkg:mentionCount a owl:DatatypeProperty ;
+    rdfs:label "mention count" ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range xsd:integer .
+
+fusionkg:neo4jRelType a owl:AnnotationProperty ;
+    rdfs:label "Neo4j relationship type" ;
+    rdfs:comment "The exact Neo4j relationship type string used in Cypher queries." .
+
+fusionkg:produces a owl:ObjectProperty ;
+    rdfs:label "produces" ;
+    fusionkg:neo4jRelType "PRODUCES" ;
+    rdfs:comment "Subject generates or emits the object as an output (e.g. D-T reaction produces neutrons)." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity ;
+    rdfs:subPropertyOf fusionkg:typedRelation .
+
+fusionkg:requires a owl:ObjectProperty ;
+    rdfs:label "requires" ;
+    fusionkg:neo4jRelType "REQUIRES" ;
+    rdfs:comment "Subject depends on the object as a prerequisite condition or resource." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity ;
+    rdfs:subPropertyOf fusionkg:typedRelation .
+
+fusionkg:uses a owl:ObjectProperty ;
+    rdfs:label "uses" ;
+    fusionkg:neo4jRelType "USES" ;
+    rdfs:comment "Subject employs the object as a tool, method, or instrument in a fusion experiment or simulation." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity ;
+    rdfs:subPropertyOf fusionkg:typedRelation .
+
+fusionkg:Astrophysical_setting a owl:Class ;
+    rdfs:label "Astrophysical setting" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Astrophysical setting"@en .
+
+fusionkg:Boundary_Condition a owl:Class ;
+    rdfs:label "Boundary Condition" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Boundary Condition"@en .
+
+fusionkg:Celestial_object a owl:Class ;
+    rdfs:label "Celestial object" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Celestial object"@en .
+
+fusionkg:Chemical_Compound a owl:Class ;
+    rdfs:label "Chemical Compound" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Chemical Compound"@en .
+
+fusionkg:Cooling_System a owl:Class ;
+    rdfs:label "Cooling System" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Cooling System"@en .
+
+fusionkg:Coordinate_System a owl:Class ;
+    rdfs:label "Coordinate System" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Coordinate System"@en .
+
+fusionkg:Engineering_Issue a owl:Class ;
+    rdfs:label "Engineering Issue" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Engineering Issue"@en .
+
+fusionkg:Experimental_Campaign a owl:Class ;
+    rdfs:label "Experimental Campaign" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Experimental Campaign"@en .
+
+fusionkg:Field_of_Study a owl:Class ;
+    rdfs:label "Field of Study" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Field of Study"@en .
+
+fusionkg:International_Organization a owl:Class ;
+    rdfs:label "International Organization" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "International Organization"@en .
+
+fusionkg:Nuclear_Fusion_Application a owl:Class ;
+    rdfs:label "Nuclear Fusion Application" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Application"@en .
+
+fusionkg:Nuclear_Fusion_Campaign a owl:Class ;
+    rdfs:label "Nuclear Fusion Campaign" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Campaign"@en .
+
+fusionkg:Nuclear_Fusion_Device_Line a owl:Class ;
+    rdfs:label "Nuclear Fusion Device Line" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Device Line"@en .
+
+fusionkg:Nuclear_Fusion_Diagnostic a owl:Class ;
+    rdfs:label "Nuclear Fusion Diagnostic" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Diagnostic"@en .
+
+fusionkg:Nuclear_Fusion_Diagnostic_Technique a owl:Class ;
+    rdfs:label "Nuclear Fusion Diagnostic Technique" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Diagnostic Technique"@en .
+
+fusionkg:Nuclear_Fusion_Experiment a owl:Class ;
+    rdfs:label "Nuclear Fusion Experiment" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Experiment"@en .
+
+fusionkg:Nuclear_Fusion_Experimental_Facility_Component a owl:Class ;
+    rdfs:label "Nuclear Fusion Experimental Facility Component" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Experimental Facility Component"@en .
+
+fusionkg:Nuclear_Fusion_Experimental_Facility_phase a owl:Class ;
+    rdfs:label "Nuclear Fusion Experimental Facility phase" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Experimental Facility phase"@en .
+
+fusionkg:Nuclear_Fusion_Program a owl:Class ;
+    rdfs:label "Nuclear Fusion Program" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Program"@en .
+
+fusionkg:Nuclear_Fusion_Reactor_Type a owl:Class ;
+    rdfs:label "Nuclear Fusion Reactor Type" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Reactor Type"@en .
+
+fusionkg:Operating_System a owl:Class ;
+    rdfs:label "Operating System" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Operating System"@en .
+
+fusionkg:Plasma_Event a owl:Class ;
+    rdfs:label "Plasma Event" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Plasma Event"@en .
+
+fusionkg:Plasma_Property a owl:Class ;
+    rdfs:label "Plasma Property" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Plasma Property"@en .
+
+fusionkg:Plasma_description a owl:Class ;
+    rdfs:label "Plasma description" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Plasma description"@en .
+
+fusionkg:Plasma_propertyy a owl:Class ;
+    rdfs:label "Plasma propertyy" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Plasma propertyy"@en .
+
+fusionkg:Programming_language a owl:Class ;
+    rdfs:label "Programming language" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Programming language"@en .
+
+fusionkg:Propulsion_Method a owl:Class ;
+    rdfs:label "Propulsion Method" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Propulsion Method"@en .
+
+fusionkg:Publisher a owl:Class ;
+    rdfs:label "Publisher" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Publisher"@en .
+
+fusionkg:Radiation a owl:Class ;
+    rdfs:label "Radiation" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Radiation"@en .
+
+fusionkg:Stability_analysis a owl:Class ;
+    rdfs:label "Stability analysis" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Stability analysis"@en .
+
+fusionkg:Target a owl:Class ;
+    rdfs:label "Target" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Target"@en .
+
+fusionkg:Technology a owl:Class ;
+    rdfs:label "Technology" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Technology"@en .
+
+fusionkg:Unit_of_Measurement a owl:Class ;
+    rdfs:label "Unit of Measurement" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Unit of Measurement"@en .
+
+fusionkg:Workshop a owl:Class ;
+    rdfs:label "Workshop" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Workshop"@en .
+
+fusionkg:particle a owl:Class ;
+    rdfs:label "particle" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "particle"@en .
+
+fusionkg:Celestial_Body a owl:Class ;
+    rdfs:label "Celestial Body" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Celestial Body"@en .
+
+fusionkg:Detection_and_Monitoring_systems a owl:Class ;
+    rdfs:label "Detection and Monitoring systems" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Detection and Monitoring systems"@en .
+
+fusionkg:Ion a owl:Class ;
+    rdfs:label "Ion" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Ion"@en .
+
+fusionkg:Mathematical_Concept a owl:Class ;
+    rdfs:label "Mathematical Concept" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Mathematical Concept"@en .
+
+fusionkg:Nuclear_FusionSystemComponent a owl:Class ;
+    rdfs:label "Nuclear FusionSystemComponent" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear FusionSystemComponent"@en .
+
+fusionkg:Nuclear_Fusion_SystemComponent a owl:Class ;
+    rdfs:label "Nuclear Fusion SystemComponent" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion SystemComponent"@en .
+
+fusionkg:Organization a owl:Class ;
+    rdfs:label "Organization" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Organization"@en .
+
+fusionkg:Plasma_type a owl:Class ;
+    rdfs:label "Plasma type" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Plasma type"@en .
+
+fusionkg:Research_Project a owl:Class ;
+    rdfs:label "Research Project" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Research Project"@en .
+
+fusionkg:State_of_Matter a owl:Class ;
+    rdfs:label "State of Matter" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "State of Matter"@en .
+
+fusionkg:Unit a owl:Class ;
+    rdfs:label "Unit" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Unit"@en .
+
+fusionkg:Astrophysical_Object a owl:Class ;
+    rdfs:label "Astrophysical Object" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Astrophysical Object"@en .
+
+fusionkg:City a owl:Class ;
+    rdfs:label "City" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "City"@en .
+
+fusionkg:Experiment a owl:Class ;
+    rdfs:label "Experiment" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Experiment"@en .
+
+fusionkg:Geometry a owl:Class ;
+    rdfs:label "Geometry" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Geometry"@en .
+
+fusionkg:Location a owl:Class ;
+    rdfs:label "Location" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Location"@en .
+
+fusionkg:Program a owl:Class ;
+    rdfs:label "Program" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Program"@en .
+
+fusionkg:Project a owl:Class ;
+    rdfs:label "Project" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Project"@en .
+
+fusionkg:chemical_element_or_compound a owl:Class ;
+    rdfs:label "chemical element or compound" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "chemical element or compound"@en .
+
+fusionkg:Application a owl:Class ;
+    rdfs:label "Application" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Application"@en .
+
+fusionkg:Nuclear_Fusion_Device a owl:Class ;
+    rdfs:label "Nuclear Fusion Device" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Nuclear Fusion Device"@en .
+
+fusionkg:Heating_and_Current_Drive a owl:Class ;
+    rdfs:label "Heating and Current Drive" ;
+    rdfs:subClassOf fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Heating_Method,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process ;
+    skos:prefLabel "Heating and Current Drive"@en .
+
+fusionkg:typedRelation a owl:ObjectProperty ;
+    rdfs:label "typed relation" ;
+    rdfs:comment "Parent property for all semantically typed relations extracted by analysis/typed_relation_ie.py from paper abstract context." ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity .
+
+fusionkg:Country_and_location a owl:Class ;
+    rdfs:label "Country and location" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Country and location"@en .
+
+fusionkg:Material a owl:Class ;
+    rdfs:label "Material" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Material"@en .
+
+fusionkg:Database a owl:Class ;
+    rdfs:label "Database" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Database"@en .
+
+fusionkg:Event a owl:Class ;
+    rdfs:label "Event" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Event"@en .
+
+fusionkg:Person a owl:Class ;
+    rdfs:label "Person" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Person"@en .
+
+fusionkg:Safety_Feature_and_Regulatory_Standard a owl:Class ;
+    rdfs:label "Safety Feature and Regulatory Standard" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Safety Feature and Regulatory Standard"@en .
+
+fusionkg:Time_reference a owl:Class ;
+    rdfs:label "Time reference" ;
+    rdfs:subClassOf fusionkg:Entity ;
+    skos:prefLabel "Time reference"@en .
+
+fusionkg:Acronym a owl:Class ;
+    rdfs:label "Acronym" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Entity,
+        fusionkg:Physical_Process ;
+    skos:prefLabel "Acronym"@en .
+
+fusionkg:Facility_or_Institution a owl:Class ;
+    rdfs:label "Facility or Institution" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Entity,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration ;
+    skos:prefLabel "Facility or Institution"@en .
+
+fusionkg:Software_and_simulation a owl:Class ;
+    rdfs:label "Software and simulation" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Entity,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Software and simulation"@en .
+
+fusionkg:Heating_Method a owl:Class ;
+    rdfs:label "Heating Method" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Heating_and_Current_Drive,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process ;
+    skos:prefLabel "Heating Method"@en .
+
+fusionkg:Scientific_Publication_and_citation a owl:Class ;
+    rdfs:label "Scientific Publication and citation" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Research_field,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Scientific Publication and citation"@en .
+
+fusionkg:Research_field a owl:Class ;
+    rdfs:label "Research field" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_property,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Research field"@en .
+
+fusionkg:Chemical_Element_or_Compound a owl:Class ;
+    rdfs:label "Chemical Element or Compound" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region ;
+    skos:prefLabel "Chemical Element or Compound"@en .
+
+fusionkg:Control_Systems a owl:Class ;
+    rdfs:label "Control Systems" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Heating_Method,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_property,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Control Systems"@en .
+
+fusionkg:Detection_and_Monitoring_Systems a owl:Class ;
+    rdfs:label "Detection and Monitoring Systems" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Detection and Monitoring Systems"@en .
+
+fusionkg:Field_Configuration a owl:Class ;
+    rdfs:label "Field Configuration" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Field Configuration"@en .
+
+fusionkg:Nuclear_Fusion_Experimental_Facility a owl:Class ;
+    rdfs:label "Nuclear Fusion Experimental Facility" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Facility_or_Institution,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Research_field ;
+    skos:prefLabel "Nuclear Fusion Experimental Facility"@en .
+
+fusionkg:Plasma_event a owl:Class ;
+    rdfs:label "Plasma event" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Plasma event"@en .
+
+fusionkg:Plasma_region a owl:Class ;
+    rdfs:label "Plasma region" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Plasma region"@en .
+
+fusionkg:Particle a owl:Class ;
+    rdfs:label "Particle" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region ;
+    skos:prefLabel "Particle"@en .
+
+fusionkg:Nuclear_Fusion_System_Configuration a owl:Class ;
+    rdfs:label "Nuclear Fusion System Configuration" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Facility_or_Institution,
+        fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Nuclear Fusion System Configuration"@en .
+
+fusionkg:Theory_and_Calculation a owl:Class ;
+    rdfs:label "Theory and Calculation" ;
+    rdfs:subClassOf fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Software_and_simulation ;
+    skos:prefLabel "Theory and Calculation"@en .
+
+fusionkg:coOccursWith a owl:ObjectProperty,
+        owl:SymmetricProperty ;
+    rdfs:label "co-occurs with" ;
+    rdfs:domain fusionkg:Entity ;
+    rdfs:range fusionkg:Entity .
+
+fusionkg:Plasma_dynamic_and_behavior a owl:Class ;
+    rdfs:label "Plasma dynamic and behavior" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Software_and_simulation,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Plasma dynamic and behavior"@en .
+
+fusionkg:Nuclear_Fusion_Technique a owl:Class ;
+    rdfs:label "Nuclear Fusion Technique" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Heating_Method,
+        fusionkg:Heating_and_Current_Drive,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Software_and_simulation,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Nuclear Fusion Technique"@en .
+
+fusionkg:Plasma_property a owl:Class ;
+    rdfs:label "Plasma property",
+        "Plasma property." ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Plasma property"@en,
+        "Plasma property."@en .
+
+fusionkg:Experimental_Apparatus a owl:Class ;
+    rdfs:label "Experimental Apparatus" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Field_Configuration,
+        fusionkg:Heating_Method,
+        fusionkg:Heating_and_Current_Drive,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Experimental Apparatus"@en .
+
+fusionkg:Nuclear_Fusion_Device_Type a owl:Class ;
+    rdfs:label "Nuclear Fusion Device Type" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Facility_or_Institution,
+        fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Nuclear Fusion Device Type"@en .
+
+fusionkg:Nuclear_Fusion_System_Component a owl:Class ;
+    rdfs:label "Nuclear Fusion System Component" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Facility_or_Institution,
+        fusionkg:Field_Configuration,
+        fusionkg:Heating_Method,
+        fusionkg:Heating_and_Current_Drive,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Nuclear Fusion System Component"@en .
+
+fusionkg:Concept a owl:Class ;
+    rdfs:label "Concept" ;
+    rdfs:subClassOf fusionkg:Acronym,
+        fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Facility_or_Institution,
+        fusionkg:Field_Configuration,
+        fusionkg:Heating_Method,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Software_and_simulation,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Concept"@en .
+
+fusionkg:Physics_Entity a owl:Class ;
+    rdfs:label "Physics Entity" ;
+    rdfs:subClassOf fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physical_Process,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Physics Entity"@en .
+
+fusionkg:Physical_Process a owl:Class ;
+    rdfs:label "Physical Process" ;
+    rdfs:subClassOf fusionkg:Acronym,
+        fusionkg:Chemical_Element_or_Compound,
+        fusionkg:Concept,
+        fusionkg:Control_Systems,
+        fusionkg:Detection_and_Monitoring_Systems,
+        fusionkg:Entity,
+        fusionkg:Experimental_Apparatus,
+        fusionkg:Field_Configuration,
+        fusionkg:Heating_Method,
+        fusionkg:Heating_and_Current_Drive,
+        fusionkg:Nuclear_Fusion_Device_Type,
+        fusionkg:Nuclear_Fusion_Experimental_Facility,
+        fusionkg:Nuclear_Fusion_System_Component,
+        fusionkg:Nuclear_Fusion_System_Configuration,
+        fusionkg:Nuclear_Fusion_Technique,
+        fusionkg:Particle,
+        fusionkg:Physics_Entity,
+        fusionkg:Plasma_dynamic_and_behavior,
+        fusionkg:Plasma_event,
+        fusionkg:Plasma_property,
+        fusionkg:Plasma_region,
+        fusionkg:Research_field,
+        fusionkg:Scientific_Publication_and_citation,
+        fusionkg:Software_and_simulation,
+        fusionkg:Theory_and_Calculation ;
+    skos:prefLabel "Physical Process"@en .
+
+fusionkg:Entity a owl:Class ;
+    rdfs:label "Entity" ;
+    rdfs:comment "Top-level class for all entities extracted from fusion energy literature." ;
+    rdfs:seeAlso bfo:BFO_0000001 .
+

@@ -26,10 +26,49 @@ services:
       timeout: 5s
       retries: 10
 
+  # ── Qdrant — vector store for KnowledgeGraphBuilder chunk retrieval ──────
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: fusion-qdrant
+    ports:
+      - "6333:6333"   # REST API + dashboard at /dashboard
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: "6334"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Fuseki — SPARQL/ontology store for KnowledgeGraphBuilder ─────────────
+  fuseki:
+    image: stain/jena-fuseki:latest
+    container_name: fusion-fuseki
+    ports:
+      - "3030:3030"
+    environment:
+      ADMIN_PASSWORD: fusion2026
+      JVM_ARGS: "-Xmx1g"
+    volumes:
+      - fuseki_data:/fuseki
+      # Mount our ontology so it's available inside the container
+      - ./output:/fuseki/import:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3030/$/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
   # Ollama runs locally (not in Docker).
   # Start it with:  ollama serve
-  # Pull the model: ollama pull nemotron-mini-4b:latest
+  # Pull the model: ollama pull gemma4:e2b
+  # For KGB embeddings also pull: ollama pull nomic-embed-text
 
 volumes:
   neo4j_data:
   neo4j_logs:
+  qdrant_data:
+  fuseki_data:

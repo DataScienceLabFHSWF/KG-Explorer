@@ -59,6 +59,7 @@ class PipelineStats:
     oa_unknown: int = 0
     with_repo_preprint: int = 0   # have arXiv/OSTI/Zenodo version
     downloadable: int = 0         # have any PDF URL (publisher or repo)
+    downloaded: int = 0           # actually fetched in this run
     local_pdfs: int = 0
     elapsed_seconds: float = 0.0
     oa_found: int = 0
@@ -130,8 +131,17 @@ class DAQPipeline:
             catalogue = load_catalogue(Path(self.catalogue_path))
             logger.info("  Loaded %d records from %s", len(catalogue), self.catalogue_path)
         else:
-            catalogue = build_catalogue(data_dir)
-            logger.info("  Built catalogue: %d unique papers", len(catalogue))
+            # Auto-use enriched catalogue if it already exists from a prior run
+            auto_enriched = Path(self.output_dir) / "catalogue_enriched.json"
+            if auto_enriched.exists():
+                catalogue = load_catalogue(auto_enriched)
+                logger.info(
+                    "  Loaded %d enriched records from %s (prior run)",
+                    len(catalogue), auto_enriched,
+                )
+            else:
+                catalogue = build_catalogue(data_dir)
+                logger.info("  Built catalogue: %d unique papers", len(catalogue))
 
         if self.local_pdf_dir:
             local_records = load_local_pdfs(Path(self.local_pdf_dir))
@@ -176,14 +186,25 @@ class DAQPipeline:
             self.categories = sorted(cats) if cats else None
 
         # ── Step 2: Enrich via OpenAlex ───────────────────────────────
-        logger.info("Step 2/4 — Enriching %d records via OpenAlex …", len(records))
+        # Skip records that already have an openalex_id (previously enriched).
+        unenriched = [r for r in records if not r.openalex_id]
+        already = len(records) - len(unenriched)
+        if already:
+            logger.info(
+                "Step 2/4 — Enriching %d records via OpenAlex … (%d already enriched, skipping)",
+                len(unenriched), already,
+            )
+        else:
+            logger.info("Step 2/4 — Enriching %d records via OpenAlex …", len(records))
         client = OpenAlexClient(email=self.email)
-        for rec in tqdm(records, desc="OpenAlex enrichment", unit="paper"):
+        for rec in tqdm(unenriched, desc="OpenAlex enrichment", unit="paper"):
             try:
                 client.enrich(rec)
                 stats.enriched += 1
             except Exception:
                 logger.debug("  OpenAlex failed for %s", rec.paper_id, exc_info=True)
+        # Also count already-enriched records towards totals
+        stats.enriched += already
 
         stats.oa_found = sum(1 for r in records if r.pdf_url)
 

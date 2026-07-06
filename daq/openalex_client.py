@@ -73,8 +73,18 @@ class OpenAlexClient:
 
     # ── Low-level request ─────────────────────────────────────────────────
 
-    def _get(self, url: str, params: dict[str, Any] | None = None) -> dict | None:
-        """Rate-limited GET returning parsed JSON, or None on failure."""
+    def _get(
+        self,
+        url: str,
+        params: dict[str, Any] | None = None,
+        _retry: int = 0,
+        _max_retries: int = 3,
+    ) -> dict | None:
+        """Rate-limited GET with exponential back-off on 429.
+
+        Gives up after ``_max_retries`` consecutive 429 responses so the
+        pipeline does not stall indefinitely on a single paper.
+        """
         elapsed = time.time() - self._last_request_time
         if elapsed < self.rate_limit:
             time.sleep(self.rate_limit - elapsed)
@@ -84,14 +94,25 @@ class OpenAlexClient:
             params["mailto"] = self.email
 
         try:
-            resp = self.session.get(url, params=params, timeout=15)
+            resp = self.session.get(url, params=params, timeout=20)
             self._last_request_time = time.time()
 
             if resp.status_code == 429:
-                retry_after = int(resp.headers.get("Retry-After", 5))
-                logger.warning("Rate limited by OpenAlex, sleeping %ds", retry_after)
-                time.sleep(retry_after)
-                return self._get(url, params)
+                if _retry >= _max_retries:
+                    logger.warning(
+                        "OpenAlex: too many 429s for %s — skipping (retry %d/%d)",
+                        url, _retry, _max_retries,
+                    )
+                    return None
+                # Exponential back-off: honour Retry-After but cap at 60 s
+                retry_after = min(int(resp.headers.get("Retry-After", 10)), 60)
+                backoff = retry_after * (2 ** _retry)
+                logger.warning(
+                    "Rate limited by OpenAlex (retry %d/%d), sleeping %ds",
+                    _retry + 1, _max_retries, backoff,
+                )
+                time.sleep(backoff)
+                return self._get(url, params, _retry=_retry + 1, _max_retries=_max_retries)
 
             if resp.status_code != 200:
                 logger.debug("OpenAlex %s returned %d", url, resp.status_code)
@@ -254,3 +275,57 @@ class OpenAlexClient:
             record.title = info["title"]
 
         return record
+
+    # ── Generic text search (used by ResearchSwarm / ReAct agent) ─────────
+
+    def search_works(
+        self,
+        query: str,
+        per_page: int = 10,
+        filter_str: str = "primary_topic.domain.id:3",  # physical sciences
+    ) -> list[dict]:
+        """Search OpenAlex for works matching *query*.
+
+        Returns a list of raw work dicts (same structure as ``resolve_doi``).
+        Scoped to the physical-sciences domain by default.
+
+        Parameters
+        ----------
+        query
+            Free-text search string.
+        per_page
+            Number of results to return (max 200 per OpenAlex API).
+        filter_str
+            Additional OpenAlex filter expression appended to the query.
+        """
+        url = f"{_BASE_URL}/works"
+        params: dict[str, Any] = {
+            "search": query,
+            "per_page": str(min(per_page, 200)),
+            "select": "id,title,doi,publication_date,cited_by_count,open_access,best_oa_location,locations,primary_location,authorships,abstract_inverted_index",
+        }
+        if filter_str:
+            params["filter"] = filter_str
+
+        data = self._get(url, params=params)
+        if not data:
+            return []
+        results = data.get("results") or []
+        # Reconstruct abstract from inverted index when present
+        for work in results:
+            inv = work.pop("abstract_inverted_index", None)
+            if inv and not work.get("abstract"):
+                work["abstract"] = _reconstruct_abstract(inv)
+        return results
+
+
+def _reconstruct_abstract(inverted_index: dict) -> str:
+    """Reconstruct plain-text abstract from OpenAlex inverted index format."""
+    if not inverted_index:
+        return ""
+    positions: list[tuple[int, str]] = []
+    for word, pos_list in inverted_index.items():
+        for pos in pos_list:
+            positions.append((pos, word))
+    positions.sort()
+    return " ".join(word for _, word in positions)

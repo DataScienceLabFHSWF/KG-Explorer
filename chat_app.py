@@ -147,9 +147,102 @@ long/complex questions, switch to qwen2.5:7b or llama3.1:8b._
             st.session_state["pending_query"] = q
 
     st.divider()
+    st.subheader("Agent mode")
+    agent_mode = st.radio(
+        "Query mode",
+        ["Standard", "ReAct"],
+        index=0,
+        key="agent_mode",
+        help=(
+            "**Standard** — single-pass Cypher + GraphRAG (fast).\n\n"
+            "**ReAct** — iterative Thought→Action→Observation loop; "
+            "uses KG search, entity lookup, OpenAlex, and ArXiv until "
+            "coverage is sufficient."
+        ),
+    )
+    react_max_steps = st.slider("ReAct max steps", 2, 10, 5, key="react_steps",
+                                disabled=(agent_mode == "Standard"))
+    react_threshold = st.slider("Coverage threshold", 0.3, 1.0, 0.75, 0.05,
+                                key="react_threshold",
+                                disabled=(agent_mode == "Standard"))
+
+    st.divider()
+    st.subheader("Research swarm")
+    swarm_on_low = st.checkbox(
+        "Auto-trigger swarm on low coverage",
+        value=False,
+        key="swarm_on_low",
+        help="When coverage < threshold, launch parallel OpenAlex + ArXiv agents.",
+    )
+    swarm_threshold = st.slider("Swarm trigger threshold", 0.1, 0.7, 0.35, 0.05,
+                                key="swarm_threshold",
+                                disabled=not swarm_on_low)
+
+    st.divider()
+    st.subheader("Memory")
+    memory_on = st.checkbox(
+        "Enable long-term memory",
+        value=False,
+        key="memory_on",
+        help="Store Q/A turns in Neo4j and recall relevant past answers.",
+    )
+    show_memory_recall = st.checkbox(
+        "Show recalled memories",
+        value=True,
+        key="show_memory_recall",
+        disabled=not memory_on,
+    )
+
+    st.divider()
     if st.button("🗑️ Clear conversation", use_container_width=True):
         st.session_state["messages"] = []
         st.rerun()
+
+
+# ── Memory graph (cached singleton) ──────────────────────────────────────
+
+@st.cache_resource(show_spinner=False)
+def _get_memory_graph():
+    try:
+        from analysis.memory_graph import MemoryGraph
+        return MemoryGraph(), None
+    except Exception as exc:
+        return None, str(exc)
+
+
+def _ensure_memory_session() -> str | None:
+    """Return (or create) the memory session ID for this browser session."""
+    if not st.session_state.get("memory_on", False):
+        return None
+    mem, err = _get_memory_graph()
+    if mem is None:
+        return None
+    if "memory_session_id" not in st.session_state:
+        st.session_state["memory_session_id"] = mem.new_session(topic="fusion-kg-chat")
+    return st.session_state["memory_session_id"]
+
+
+# ── ReAct agent (cached per config) ──────────────────────────────────────
+
+@st.cache_resource(show_spinner=False)
+def _get_react_agent(ollama_url: str, model: str, max_steps: int, threshold: float):
+    try:
+        from analysis.llm_graph_qa import FusionCypherAgent
+        from analysis.react_agent import ReActAgent
+        from daq.arxiv_client import ArXivClient
+        from daq.openalex_client import OpenAlexClient
+        kg_agent = FusionCypherAgent(ollama_url=ollama_url, model=model)
+        arxiv = ArXivClient()
+        oa = OpenAlexClient()
+        return ReActAgent(
+            kg_agent=kg_agent,
+            openalex_client=oa,
+            arxiv_client=arxiv,
+            max_steps=max_steps,
+            coverage_threshold=threshold,
+        ), None
+    except Exception as exc:
+        return None, str(exc)
 
 
 # ── LLM agent (cached per Ollama URL + model) ─────────────────────────────
@@ -362,7 +455,7 @@ st.caption(
 )
 st.divider()
 
-tab_chat, tab_gaps = st.tabs(["Chat", "Answer-Gap Report"])
+tab_chat, tab_gaps, tab_memory = st.tabs(["Chat", "Answer-Gap Report", "Memory Graph"])
 
 with tab_chat:
     # Display existing conversation
@@ -405,12 +498,127 @@ with tab_chat:
                 )
                 msg = {"role": "assistant", "answer": "", "cypher": "", "context": [], "error": init_error}
             else:
-                with st.spinner("Entity linking → Cypher generation → Graph query → Answer…"):
-                    llm_history = _history_for_llm()[:-1]  # exclude the just-added user message
-                    result = agent.ask(query_text, history=llm_history)
+                # ── Memory recall ──────────────────────────────────────────
+                mem_session_id = _ensure_memory_session()
+                if mem_session_id and st.session_state.get("show_memory_recall", True):
+                    mem_graph, _ = _get_memory_graph()
+                    if mem_graph:
+                        past = mem_graph.recall(query_text, top_k=3)
+                        if past:
+                            with st.expander(f"🧠 Recalled {len(past)} past memory/memories", expanded=False):
+                                for pm in past:
+                                    ts = str(pm.get("timestamp", ""))[:19]
+                                    st.markdown(
+                                        f"**[{ts}]** {pm.get('question','?')}\n\n"
+                                        f"> {str(pm.get('answer',''))[:200]}…"
+                                    )
 
-                _render_assistant_msg(result)
-                msg = {"role": "assistant", **result}
+                # ── Route to ReAct or Standard agent ──────────────────────
+                mode = st.session_state.get("agent_mode", "Standard")
+
+                if mode == "ReAct":
+                    react_agent, react_err = _get_react_agent(
+                        st.session_state.get("ollama_url", "http://localhost:11434"),
+                        st.session_state.get("ollama_model", "gemma4:e2b"),
+                        st.session_state.get("react_steps", 5),
+                        st.session_state.get("react_threshold", 0.75),
+                    )
+                    if react_err or react_agent is None:
+                        st.warning(f"ReAct agent unavailable: {react_err}. Falling back to standard.")
+                        mode = "Standard"
+                    else:
+                        with st.spinner("ReAct: iterative reasoning → KG + literature search…"):
+                            react_result = react_agent.run(query_text)
+                        answer = react_result.answer
+                        coverage = react_result.coverage_score
+                        stopped = react_result.stopped_reason
+                        steps = react_result.steps
+
+                        st.markdown(f'<div class="answer-text">{answer}</div>', unsafe_allow_html=True)
+                        pills = [
+                            f"ReAct • {len(steps)} steps",
+                            f"coverage {coverage:.0%}",
+                            stopped.replace('_', ' '),
+                        ]
+                        st.markdown(
+                            " ".join(f'<span class="ctx-pill">{p}</span>' for p in pills),
+                            unsafe_allow_html=True,
+                        )
+                        with st.expander("ReAct reasoning trace", expanded=False):
+                            for s in steps:
+                                st.markdown(f"**Step {s.step} · {s.tool}**")
+                                if s.thought:
+                                    st.markdown(f"*Thought:* {s.thought[:300]}")
+                                st.markdown(f"*Observation:* {s.observation[:300]}")
+                                st.divider()
+
+                        result = {"answer": answer, "cypher": "", "context": [],
+                                  "linked_entities": [], "fallback_used": False,
+                                  "coverage_score": coverage}
+                        msg = {"role": "assistant", **result}
+
+                if mode == "Standard":
+                    with st.spinner("Entity linking → Cypher generation → Graph query → Answer…"):
+                        llm_history = _history_for_llm()[:-1]
+                        result = agent.ask(query_text, history=llm_history)
+                    _render_assistant_msg(result)
+                    msg = {"role": "assistant", **result}
+
+                # ── Research swarm on low coverage ─────────────────────────
+                coverage = result.get("coverage_score", 1.0) if isinstance(result, dict) else 0.5
+                swarm_threshold = st.session_state.get("swarm_threshold", 0.35)
+                if (
+                    st.session_state.get("swarm_on_low", False)
+                    and isinstance(coverage, float)
+                    and coverage < swarm_threshold
+                ):
+                    with st.spinner(f"🔬 Coverage low ({coverage:.0%}) — launching research swarm…"):
+                        try:
+                            from daq.research_swarm import maybe_trigger_swarm
+                            swarm_papers = maybe_trigger_swarm(
+                                question=query_text,
+                                coverage_score=coverage,
+                                coverage_threshold=swarm_threshold,
+                                n_agents=3,
+                                papers_per_agent=5,
+                            )
+                            if swarm_papers:
+                                with st.expander(
+                                    f"🔬 Research swarm found {len(swarm_papers)} candidate papers",
+                                    expanded=True,
+                                ):
+                                    for sp in swarm_papers[:8]:
+                                        oa_tag = "✅ OA" if sp.is_oa or sp.pdf_url else "🔒"
+                                        st.markdown(
+                                            f"**{sp.title}** &nbsp; {oa_tag} &nbsp; "
+                                            f"[{sp.source}] &nbsp; cited:{sp.citations} &nbsp; "
+                                            f"{sp.published[:7]}"
+                                        )
+                                        if sp.abstract:
+                                            st.caption(sp.abstract[:200] + "…")
+                        except Exception as swarm_exc:
+                            st.warning(f"Swarm error: {swarm_exc}")
+
+                # ── Store turn in memory graph ─────────────────────────────
+                if mem_session_id:
+                    mem_graph, _ = _get_memory_graph()
+                    if mem_graph and isinstance(result, dict) and result.get("answer"):
+                        linked = [name for name, _ in (result.get("linked_entities") or [])]
+                        try:
+                            from analysis.memory_graph import extract_facts_from_answer
+                            facts = extract_facts_from_answer(
+                                agent.llm, query_text, result["answer"]
+                            )
+                        except Exception:
+                            facts = []
+                        mem_graph.remember(
+                            session_id=mem_session_id,
+                            question=query_text,
+                            answer=result["answer"],
+                            entities=linked,
+                            coverage_score=float(result.get("coverage_score", 0)),
+                            facts=facts,
+                        )
 
         st.session_state["messages"].append(msg)
         st.rerun()
@@ -418,4 +626,80 @@ with tab_chat:
 
 with tab_gaps:
     _render_gap_report_tab()
+
+
+with tab_memory:
+    st.subheader("Long-term Memory Graph")
+    st.caption(
+        "Each Q/A turn is stored in Neo4j as a Memory node linked to the KG entities "
+        "it mentions. Enable memory in the sidebar to start recording."
+    )
+    mem_graph, mem_err = _get_memory_graph()
+    if mem_err:
+        st.warning(f"Memory graph unavailable: {mem_err}")
+    elif not st.session_state.get("memory_on", False):
+        st.info("Enable **Long-term memory** in the sidebar to start recording and recalling.")
+    else:
+        stats = mem_graph.stats()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Sessions", stats.get("sessions", 0))
+        c2.metric("Memories", stats.get("memories", 0))
+        c3.metric("Facts", stats.get("facts", 0))
+        st.divider()
+
+        recall_q = st.text_input("Recall memories about…", key="memory_recall_q")
+        if recall_q:
+            rows = mem_graph.recall(recall_q, top_k=10)
+            if not rows:
+                st.info("No memories found.")
+            for r in rows:
+                ts = str(r.get("timestamp", ""))[:19]
+                cov = r.get("coverage_score", 0)
+                st.markdown(f"**[{ts}]** *{r.get('question','?')}*")
+                st.markdown(f"> {str(r.get('answer',''))[:300]}")
+                st.caption(f"coverage={cov:.2f}  session={r.get('session_id','?')[:8]}")
+                st.divider()
+
+        if st.button("Export memories to JSON", key="export_mem"):
+            export_path = Path("output/memory_export.json")
+            try:
+                mem_graph.export(export_path)
+                st.success(f"Exported → {export_path}")
+            except Exception as exc:
+                st.error(f"Export failed: {exc}")
+
+        st.divider()
+        st.subheader("Research Swarm")
+        st.caption("Manually run the research swarm to find papers for the top gap entities.")
+        top_gaps = st.slider("Top gap entities", 3, 20, 8, key="swarm_top_gaps")
+        n_agents = st.slider("Concurrent agents", 1, 8, 4, key="swarm_n_agents")
+        if st.button("🔬 Run research swarm from gap report", key="run_swarm"):
+            try:
+                from daq.research_swarm import ResearchSwarm
+                with st.spinner("Swarm running — searching OpenAlex + ArXiv in parallel…"):
+                    swarm = ResearchSwarm.from_gap_report(top_gaps=top_gaps, n_agents=n_agents)
+                    papers = swarm.run()
+                    swarm.save_results()
+                summary = swarm.summary()
+                st.success(
+                    f"Found {summary['total']} papers "
+                    f"({summary['open_access']} OA, "
+                    f"OA={summary['by_source']['openalex']}, "
+                    f"ArXiv={summary['by_source']['arxiv']})"
+                )
+                import pandas as _pd
+                rows_sw = [
+                    {
+                        "Title": p.title[:70],
+                        "Source": p.source,
+                        "OA": "✅" if p.is_oa or p.pdf_url else "🔒",
+                        "Cited": p.citations,
+                        "Date": p.published[:7],
+                        "Query": p.query[:30],
+                    }
+                    for p in papers[:30]
+                ]
+                st.dataframe(_pd.DataFrame(rows_sw), use_container_width=True, hide_index=True)
+            except Exception as exc:
+                st.error(f"Swarm error: {exc}")
 

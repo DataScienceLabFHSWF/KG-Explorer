@@ -1,0 +1,66 @@
+# Competency Questions — Fusion Energy Knowledge Graph
+# One question per line. These steer KnowledgeGraphBuilder's iterative discovery loop.
+# Generated from the answer-gap report and domain expertise.
+# Format: plain text, one question per line, blank lines and # comments ignored.
+
+# ── Core physics ─────────────────────────────────────────────────────────────
+What plasma temperature is required to achieve ignition in a tokamak?
+How does magnetic confinement prevent plasma from touching reactor walls?
+What causes plasma instabilities in a tokamak and how are they mitigated?
+What is the role of the q-factor (safety factor) in plasma stability?
+How does neutral beam injection heat the plasma?
+What is the difference between L-mode and H-mode plasma confinement?
+How does pellet injection affect plasma density profiles?
+What is the energy confinement time and how is it measured?
+
+# ── Devices and experiments ───────────────────────────────────────────────────
+What are the main differences between a tokamak and a stellarator?
+How does ITER differ from JET in design and expected performance?
+What superconducting materials are used in ITER's magnetic field coils?
+How does the Wendelstein 7-X stellarator achieve steady-state operation?
+What plasma-facing materials are used in the JET divertor?
+How does the NIF inertial confinement fusion experiment work?
+What is the purpose of the SPARC compact tokamak?
+How does Commonwealth Fusion Systems plan to achieve net energy gain?
+
+# ── Fuel cycle and tritium ────────────────────────────────────────────────────
+What is the deuterium-tritium fusion reaction and why is it preferred?
+How is tritium bred inside a fusion reactor blanket?
+What is tritium breeding ratio and what value is needed for self-sufficiency?
+What lithium compounds are used in tritium breeding blankets?
+How does tritium retention in plasma-facing components affect fuel efficiency?
+
+# ── Materials and engineering ─────────────────────────────────────────────────
+What materials are used as plasma-facing components in fusion reactors?
+Why is tungsten preferred over carbon for divertor plasma-facing components?
+What radiation damage effects do fusion neutrons cause in structural materials?
+How does reduced activation ferritic-martensitic steel perform under neutron irradiation?
+What are the main challenges in developing high-temperature superconducting (HTS) magnets for fusion?
+
+# ── Heating and current drive ─────────────────────────────────────────────────
+How does electron cyclotron resonance heating (ECRH) work?
+What is the role of lower hybrid current drive in sustaining plasma current?
+How does bootstrap current reduce the need for external current drive?
+
+# ── Divertor and exhaust ──────────────────────────────────────────────────────
+What is the purpose of a divertor in a tokamak?
+How does divertor detachment help manage heat loads?
+What is the scrape-off layer and how does it transport energy to the divertor?
+How does impurity seeding reduce divertor heat flux?
+
+# ── Control and disruptions ───────────────────────────────────────────────────
+What causes plasma disruptions and how can they be predicted?
+How does runaway electron mitigation work after a disruption?
+What real-time control systems are used to maintain plasma shape?
+
+# ── Inertial confinement fusion ───────────────────────────────────────────────
+How does laser-driven inertial confinement fusion achieve ignition?
+What is the hotspot ignition concept in NIF experiments?
+How does implosion symmetry affect ICF target performance?
+What is the role of the hohlraum in indirect-drive ICF?
+
+# ── Power plant and commercialisation ────────────────────────────────────────
+What is the Q-value and what Q is needed for a commercial fusion power plant?
+How does the balance of plant for a fusion power plant compare to fission?
+What are the main engineering challenges for the DEMO fusion reactor?
+What is the levelised cost of energy for projected fusion power plants?
